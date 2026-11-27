@@ -306,4 +306,15 @@ std::optional<TextEditRequest> TexteditCommand::textEditing() const {
         core::dimensionText(variables, dimension->definition.kind, measurement, "<>")};
 }
 
+std::optional<core::EntityId> TexteditCommand::attributeEditing() const {
+    if (m_stage == Stage::AttributeTag) {
+        return m_target;
+    }
+    if (m_stage == Stage::Attributes && m_attribute == 0 &&
+        std::holds_alternative<core::Insert>(m_original)) {
+        return m_target;
+    }
+    return std::nullopt;
+}
+
 }  // namespace tg::cmd

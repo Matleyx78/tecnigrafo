@@ -152,6 +152,39 @@ TEST_F(TexteditCommandTest, InsertAttributesNeverExposeTheEditorRequest) {
     runner().submit(CancelInput{});
 }
 
+TEST_F(TexteditCommandTest, AttributeEditingIdentifiesOnlyTheFirstAttributeQuestion) {
+    core::AttributeDefinition definition;
+    definition.text.height = 1.0;
+    definition.tag = "LABEL";
+    definition.prompt = "Label";
+    const core::EntityId definitionId = add(definition);
+
+    submit({"TEXTEDIT", "0,0"});
+    EXPECT_EQ(runner().attributeEditing(), definitionId);
+    runner().submit(ConfirmInput{});
+    EXPECT_FALSE(runner().attributeEditing());
+    runner().submit(CancelInput{});
+
+    document().replaceBlock("ATTRS", core::BlockDefinition{.name = "ATTRS"});
+    core::Insert insert;
+    insert.block = "ATTRS";
+    for (const auto& [tag, value] : {std::pair{"FIRST", "one"}, std::pair{"SECOND", "two"}}) {
+        core::Attribute attribute;
+        attribute.tag = tag;
+        attribute.text.height = 1.0;
+        attribute.text.value = value;
+        attribute.text.position = {30.0, 0.0};
+        insert.attributes.push_back(attribute);
+    }
+    const core::EntityId insertId = add(insert);
+
+    submit({"ATTREQ", "0", "TEXTEDIT", "30,0"});
+    EXPECT_EQ(runner().attributeEditing(), insertId);
+    runner().submit(ConfirmInput{});
+    EXPECT_FALSE(runner().attributeEditing());
+    runner().submit(CancelInput{});
+}
+
 TEST_F(TexteditCommandTest, EmptyEditorValueKeepsTextAndUndoRevertsTheLastEdit) {
     core::Text text;
     text.value = "OLD";

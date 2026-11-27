@@ -28,38 +28,6 @@
 namespace tg::app {
 namespace {
 
-const core::EntityRecord* attributeDefinitionForPrompt(const core::Document& document,
-                                                       const std::string& prompt) {
-    constexpr std::string_view kPrefix = "Enter attribute tag <";
-    constexpr std::string_view kSuffix = ">:";
-    if (!prompt.starts_with(kPrefix) || !prompt.ends_with(kSuffix)) {
-        return nullptr;
-    }
-    const std::string tag =
-        prompt.substr(kPrefix.size(), prompt.size() - kPrefix.size() - kSuffix.size());
-    for (const core::EntityRecord& record : document.entities()) {
-        const auto* definition = std::get_if<core::AttributeDefinition>(&record.entity);
-        if (definition != nullptr && definition->tag == tag) {
-            return &record;
-        }
-    }
-    return nullptr;
-}
-
-const core::Insert* insertForPrompt(const core::Document& document, const std::string& prompt) {
-    for (const core::EntityRecord& record : document.entities()) {
-        const auto* insert = std::get_if<core::Insert>(&record.entity);
-        if (insert == nullptr || insert->attributes.empty()) {
-            continue;
-        }
-        const core::Attribute& first = insert->attributes.front();
-        if (prompt == first.tag + " <" + first.text.value + ">:") {
-            return insert;
-        }
-    }
-    return nullptr;
-}
-
 void answerAttributeRequest(MainWindow& window) {
     DocumentSession* session = window.activeSession();
     const auto* history =
@@ -71,19 +39,21 @@ void answerAttributeRequest(MainWindow& window) {
         return;
     }
     cmd::CommandRunner& runner = session->runner();
-    const std::string prompt = runner.promptText();
-    const core::Document& document = session->document();
-    const core::EntityRecord* definitionRecord = attributeDefinitionForPrompt(document, prompt);
-    const core::Insert* insert =
-        definitionRecord == nullptr ? insertForPrompt(document, prompt) : nullptr;
-    if (definitionRecord == nullptr && insert == nullptr) {
+    const std::optional<core::EntityId> target = runner.attributeEditing();
+    const core::EntityRecord* record = target ? session->document().find(*target) : nullptr;
+    if (record == nullptr) {
+        return;
+    }
+
+    const auto* definition = std::get_if<core::AttributeDefinition>(&record->entity);
+    const auto* insert = std::get_if<core::Insert>(&record->entity);
+    if (definition == nullptr && insert == nullptr) {
         return;
     }
 
     window.setProperty("answeringAttributeRequest", true);
-    if (definitionRecord != nullptr) {
-        AttributeDefinitionDialog dialog(
-            std::get<core::AttributeDefinition>(definitionRecord->entity), &window);
+    if (definition != nullptr) {
+        AttributeDefinitionDialog dialog(*definition, &window);
         if (dialog.exec() == QDialog::Accepted) {
             const core::AttributeDefinition edited = dialog.definition();
             runner.submit(cmd::TextInput{edited.tag});
@@ -103,7 +73,7 @@ void answerAttributeRequest(MainWindow& window) {
         }
     }
     window.setProperty("answeringAttributeRequest", false);
-    window.inputHandled();
+    emit window.view()->inputHandled();
 }
 
 class InterfaceCommand final : public cmd::Command {
