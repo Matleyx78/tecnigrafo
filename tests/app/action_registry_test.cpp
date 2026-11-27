@@ -363,6 +363,8 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
                            QStringLiteral("&Erase")}));
     EXPECT_TRUE(titles(menus[2]->menu()->actions()).contains(QStringLiteral("Attribute &Display")));
     EXPECT_TRUE(titles(menus[2]->menu()->actions()).contains(QStringLiteral("&UCS Icon")));
+    EXPECT_TRUE(titles(menus[3]->menu()->actions()).contains(QStringLiteral("&Grid")));
+    EXPECT_TRUE(titles(menus[3]->menu()->actions()).contains(QStringLiteral("Snap to &Grid")));
     EXPECT_EQ(
         titles(menus[4]->menu()->actions()),
         (QStringList{QStringLiteral("&Line"), QStringLiteral("&Polyline"),

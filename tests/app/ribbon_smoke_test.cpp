@@ -328,6 +328,16 @@ TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
     ASSERT_NE(rectangleButton->menu(), nullptr);
     EXPECT_EQ(rectangleButton->menu()->actions(), (QList<QAction*>{rectangle, polygon}));
     EXPECT_EQ(ribbonButtonOf(*ribbon, polygon), nullptr);
+    QAction* polylineEdit = registry.action(QStringLiteral("edit.pedit"));
+    QAction* hatchEdit = registry.action(QStringLiteral("edit.hatchedit"));
+    QAction* textEdit = registry.action(QStringLiteral("edit.textedit"));
+    QToolButton* polylineEditButton = ribbonButtonOf(*ribbon, polylineEdit);
+    ASSERT_NE(polylineEditButton, nullptr);
+    ASSERT_NE(polylineEditButton->menu(), nullptr);
+    EXPECT_EQ(polylineEditButton->menu()->actions(),
+              (QList<QAction*>{polylineEdit, hatchEdit, textEdit}));
+    EXPECT_EQ(ribbonButtonOf(*ribbon, hatchEdit), nullptr);
+    EXPECT_EQ(ribbonButtonOf(*ribbon, textEdit), nullptr);
     QAction* text = registry.action(QStringLiteral("draw.text"));
     QAction* mtext = registry.action(QStringLiteral("draw.mtext"));
     QToolButton* textButton = ribbonButtonOf(*ribbon, text);

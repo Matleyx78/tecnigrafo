@@ -157,6 +157,13 @@ QStringList modifyOrder() {
             QStringLiteral("edit.erase")};
 }
 
+/// The edit commands grouped under Polyline Edit so that Modify keeps the
+/// five columns of the 2026-11-20 Home layout.
+QStringList polylineEditDropDown() {
+    return {QStringLiteral("edit.pedit"), QStringLiteral("edit.hatchedit"),
+            QStringLiteral("edit.textedit")};
+}
+
 /// The tabs of the ribbon that every environment has (docs/adr/0039, point
 /// 5): the ones of groups(). The contextual tabs of an environment follow.
 QStringList fixedTabs() {
@@ -336,6 +343,26 @@ void addPolylinePrimitiveDropDown(SARibbonPanel& panel, QAction& rectangle,
     auto* menu = new QMenu(button);
     menu->setObjectName(QStringLiteral("polylinePrimitiveDropDown"));
     for (const QString& id : polylinePrimitiveDropDown()) {
+        if (QAction* action = registry.action(id); action != nullptr) {
+            menu->addAction(action);
+        }
+    }
+    button->setMenu(menu);
+    button->setPopupMode(QToolButton::MenuButtonPopup);
+    panel.updateItemGeometry();
+}
+
+/// Gives Polyline Edit a drop-down containing the less frequently used edit
+/// commands, while their actions remain separate in the classic interface.
+void addPolylineEditDropDown(SARibbonPanel& panel, QAction& polylineEdit,
+                             const ActionRegistry& registry) {
+    SARibbonToolButton* button = panel.actionToRibbonToolButton(&polylineEdit);
+    if (button == nullptr) {
+        return;
+    }
+    auto* menu = new QMenu(button);
+    menu->setObjectName(QStringLiteral("polylineEditDropDown"));
+    for (const QString& id : polylineEditDropDown()) {
         if (QAction* action = registry.action(id); action != nullptr) {
             menu->addAction(action);
         }
@@ -943,6 +970,12 @@ void UiBuilder::buildRibbon() {
         if (spec->id == polylinePrimitiveDropDown().last()) {
             continue;
         }
+        // Hatch Edit and Text Editing share Polyline Edit's drop-down so
+        // Modify keeps the five columns of the reference Home layout.
+        if (spec->id != polylineEditDropDown().first() &&
+            polylineEditDropDown().contains(spec->id)) {
+            continue;
+        }
         SARibbonPanel* panel = panelFor(spec->ribbon);
         const bool small = smallInLargeGroup().contains(spec->id);
         if (action->menu() != nullptr) {
@@ -970,6 +1003,9 @@ void UiBuilder::buildRibbon() {
         }
         if (spec->id == polylinePrimitiveDropDown().first()) {
             addPolylinePrimitiveDropDown(*panel, *action, m_registry);
+        }
+        if (spec->id == polylineEditDropDown().first()) {
+            addPolylineEditDropDown(*panel, *action, m_registry);
         }
     }
     // SARibbonMainWindow disposes of the previous menu widget with
