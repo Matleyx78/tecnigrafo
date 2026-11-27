@@ -4,6 +4,7 @@
 #include "text_editor_overlay.hpp"
 
 #include "qt_painter.hpp"
+#include "text_format_bar.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/entity_record.hpp"
 #include "tg/core/math.hpp"
@@ -113,6 +114,9 @@ bool claimsKey(const QKeyEvent& event) {
         case Qt::Key_End:
             return true;
         case Qt::Key_A:
+        case Qt::Key_B:
+        case Qt::Key_I:
+        case Qt::Key_U:
             if (event.modifiers().testFlag(Qt::ControlModifier)) {
                 return true;
             }
@@ -222,11 +226,12 @@ void TextLineEditModel::replace(std::size_t from, std::size_t to, std::string_vi
 // --- TextEditorOverlay --------------------------------------------------
 
 TextEditorOverlay::TextEditorOverlay(QWidget* parent, const render::Viewport& viewport)
-    : QWidget(parent), m_viewport(viewport) {
+    : QWidget(parent), m_viewport(viewport), m_formatBar(new TextFormatBar(this)) {
     assert(parent != nullptr && "the text editor needs a parent drawing view");
     setObjectName(QStringLiteral("textEditor"));
     setFocusPolicy(Qt::StrongFocus);
     hide();
+    m_formatBar->hide();
 }
 
 void TextEditorOverlay::open(const cmd::TextEditRequest& request, const core::Document& document) {
@@ -255,6 +260,25 @@ void TextEditorOverlay::open(const cmd::TextEditRequest& request, const core::Do
     setGeometry(parentWidget()->rect());
     show();
     raise();
+    if (m_mtext) {
+        m_formatBar->adjustSize();
+        const auto editorBorder = border();
+        double left = std::numeric_limits<double>::infinity();
+        double top = std::numeric_limits<double>::infinity();
+        for (const core::Vec2& corner : editorBorder) {
+            const core::Vec2 screen = m_viewport.worldToScreen(corner);
+            left = std::min(left, screen.x);
+            top = std::min(top, screen.y);
+        }
+        const int barX = std::clamp(static_cast<int>(std::lround(left)), 0,
+                                    std::max(0, width() - m_formatBar->width()));
+        const int barY = std::clamp(static_cast<int>(std::lround(top)) - m_formatBar->height(), 0,
+                                    std::max(0, height() - m_formatBar->height()));
+        m_formatBar->move(barX, barY);
+        m_formatBar->show();
+    } else {
+        m_formatBar->hide();
+    }
     setFocus(Qt::OtherFocusReason);
     changed();
 }
@@ -265,6 +289,7 @@ void TextEditorOverlay::close() {
     m_line.reset();
     m_document = nullptr;
     m_selecting = false;
+    m_formatBar->hide();
     hide();
 }
 
@@ -533,6 +558,7 @@ void TextEditorOverlay::deleteForward() {
 }
 
 void TextEditorOverlay::changed() {
+    m_formatBar->refresh();
     update();
     emit selectionChanged();
 }
@@ -673,6 +699,24 @@ void TextEditorOverlay::keyPressEvent(QKeyEvent* event) {
             if (event->key() == Qt::Key_A && control) {
                 moveCaret(0, false);
                 moveCaret(positionCount() - 1, true);
+                break;
+            }
+            if (control && m_mtext &&
+                (event->key() == Qt::Key_B || event->key() == Qt::Key_I ||
+                 event->key() == Qt::Key_U)) {
+                const core::MTextFormat format = m_mtext->formatAtCaret();
+                core::MTextFormatChange change;
+                if (event->key() == Qt::Key_B) {
+                    change.kind = core::MTextFormatChange::Kind::Bold;
+                    change.on = !format.bold;
+                } else if (event->key() == Qt::Key_I) {
+                    change.kind = core::MTextFormatChange::Kind::Italic;
+                    change.on = !format.italic;
+                } else {
+                    change.kind = core::MTextFormatChange::Kind::Underline;
+                    change.on = !format.underline;
+                }
+                applyFormat(change);
                 break;
             }
             if (!claimsKey(*event)) {

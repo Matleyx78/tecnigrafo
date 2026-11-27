@@ -461,6 +461,19 @@ PT45 aggiunge il retino all'interfaccia.
 |---|---|---|---|
 | `draw-hatch` | `draw.hatch` | contorno esistente e linee del retino | sì |
 
+La barra dei formati dell'editor MTEXT (0.8.1-PT13) usa direttamente sette
+icone, ciascuna con i due file `-16.svg` e `-32.svg`.
+
+| File | Uso | Disegno | Rifatta |
+|---|---|---|---|
+| `format-bold` | grassetto | fila di tratti verticali doppi | sì |
+| `format-italic` | corsivo | fila di tratti obliqui paralleli | sì |
+| `format-underline` | sottolineato | fila di tratti con linea attiva sotto | sì |
+| `format-overline` | sopralineato | fila di tratti con linea attiva sopra | sì |
+| `format-strike` | barrato | fila di tratti con linea attiva in mezzo | sì |
+| `format-stack` | impila frazioni | due file corte separate da una linea attiva | sì |
+| `format-unstack` | disimpila frazioni | due file affiancate separate da una diagonale attiva | sì |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

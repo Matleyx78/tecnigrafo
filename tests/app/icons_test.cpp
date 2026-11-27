@@ -11,6 +11,7 @@
 #include "layer_table_model.hpp"
 #include "properties_panel.hpp"
 #include "style.hpp"
+#include "text_format_bar.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "theme.hpp"
 #include "ui_builder.hpp"
@@ -522,6 +523,8 @@ TEST(IconsTest, EveryIconFileHasAnActionOrAPanel) {
     used.append(autoHideIconNames());
     // The row of the tabs and the Start page (0.7.5-P29).
     used.append(documentTabsIconNames());
+    // The format bar of the text editor (0.8.1-PT13).
+    used.append(textFormatBarIconNames());
     // The message boxes (F6).
     used.append(styleIconNames());
     // The cancel button of the command line and the arrow that opens the

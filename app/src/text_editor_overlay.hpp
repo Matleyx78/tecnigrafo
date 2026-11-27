@@ -26,6 +26,8 @@ class Document;
 
 namespace tg::app {
 
+class TextFormatBar;
+
 /// The value of a TEXT edited in one line, without formats
 /// (docs/tappe/0.8.1/PT12-editor.md, point 3). A TEXT has no MTEXT codes:
 /// `\`, `{` and `}` are characters like the others. Its units are the
@@ -244,6 +246,7 @@ private:
     /// the text being edited, which the view still draws below.
     Box m_openedBox;
     bool m_selecting{false};
+    TextFormatBar* m_formatBar;
 };
 
 }  // namespace tg::app
