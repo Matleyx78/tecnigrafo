@@ -125,6 +125,7 @@ TEST(PromptMatches, KindsAndValueTypes) {
                                                            value != ValueType::Distance &&
                                                            value != ValueType::Angle)
             << index;
+        EXPECT_EQ(compatible(PromptKind::Name, value), value == ValueType::Name) << index;
     }
 }
 
@@ -322,8 +323,8 @@ TEST(BuiltinCommands, EveryCommandHasAValidDescription) {
         EXPECT_NE(registry.create(entry->name), nullptr) << entry->name;
     }
     const std::string expected =
-        "-ATTEDIT -BLOCK -DIMSTYLE -HATCH -HATCHEDIT -INSERT -LAYER -LINETYPE -STYLE ARC ATTDISP "
-        "ATTREQ ATTSYNC CELTSCALE CHAMFER "
+        "-ATTDEF -ATTEDIT -BLOCK -DIMSTYLE -HATCH -HATCHEDIT -INSERT -LAYER -LINETYPE -STYLE "
+        "AFLAGS ARC ATTDISP ATTREQ ATTSYNC CELTSCALE CHAMFER "
         "CHPROP "
         "CIRCLE CLAYER COLOR COPY DIMADEC DIMALIGNED DIMANGULAR DIMASZ DIMAZIN DIMCEN DIMDEC "
         "DIMDIAMETER DIMDSEP DIMEXE DIMEXO DIMGAP DIMLFAC DIMLINEAR DIMPOST DIMRADIUS DIMRND "

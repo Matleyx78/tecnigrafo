@@ -75,6 +75,7 @@ struct CommandDefaults {
     bool peditAccept{false};      ///< PEDITACCEPT, session-only (docs/adr/0050).
     bool textEditMultiple{true};  ///< TEXTEDIT mode, kept for the session (ADR 0054).
     bool attributeRequest{true};  ///< ATTREQ, session-only (docs/adr/0056, point 3).
+    int attributeFlags{16};       ///< AFLAGS, session-only (docs/adr/0056, point 2).
     bool rectangUseFillet{false};
     bool polygonCircumscribed{false};
 };
