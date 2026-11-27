@@ -28,7 +28,7 @@ Aggiornato alla versione **0.8.1**.
 | Stato | Comandi |
 |---|---|
 | completo | 20 |
-| presente | 45 |
+| presente | 46 |
 | assente | 25 |
 
 ## Disegno
@@ -83,6 +83,7 @@ Aggiornato alla versione **0.8.1**.
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
+| `SELECT` | | presente | 0.8.1 | prepara un gruppo richiamabile con *Previous* senza modificare il disegno; mancano *Fence* e i poligoni |
 | `ERASE` | `E` | presente | 0.3 | selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Fence*, *WPolygon*, *CPolygon*; *Last* e *Previous* nella 0.8.1 |
 | `MOVE` | `M` | completo | 0.7 | punto base e secondo punto, *Displacement* |
 | `COPY` | `CO`, `CP` | presente | 0.7 | copie multiple con *Undo* ed *Exit*, *Displacement*; una copia sola negli script; mancano *mOde* e *Array* |
@@ -167,7 +168,7 @@ parte.
 | Tracciamento degli snap a oggetto | `F11` | presente | 0.8 | nella 0.8.1 anche guide di prolungamento e parallele; mancano le guide polari dai punti acquisiti (`POLARMODE`) e `TRACKPATH` |
 | Orto | `F8` | completo | 0.3 | |
 | Griglia | `F7` | presente | 0.8.1 | `GRID`, passo fisso, adattiva e suddivisioni; mancano griglia a punti e rotazione con `SNAPANG` |
-| Snap alla griglia | `F9` | presente | 0.8.1 | `SNAP`, passo e base; stile isometrico e snap polare sono conservati ma senza effetto |
+| Snap alla griglia | `F9` | presente | 0.8.1 | `SNAP`, passo e base; stile isometrico e `SNAPANG` conservati ma senza effetto; manca lo snap polare |
 | Icona dell'UCS | | presente | 0.8.1 | `UCSICON` accesa o spenta, all'origine o nell'angolo; solo UCS 2D |
 | Tracciamento polare | `F10` | presente | 0.7 | incremento con `POLARANG`, distanza scritta lungo la semiretta; mancano gli angoli aggiuntivi |
 | Selezione: clic, finestra, intersezione | | presente | 0.3 | anche trascinando, con `W`, `C`, `ALL`, *Last* e *Previous*; mancano *Fence* e i poligoni |
