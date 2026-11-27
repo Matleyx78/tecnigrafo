@@ -669,7 +669,7 @@ TEST_F(DrawingAidsTest, ArcAndStraightExtensionGuidesArePaintedUntilReleased) {
     if (!arc->arc.has_value()) {
         FAIL() << "arc guide has no arc geometry";
     }
-    const core::ArcGeometry& arcGeometry = arc->arc.value();
+    const core::ArcGeometry arcGeometry = arc->arc.value_or(core::ArcGeometry{});
     const double middleAngle = arcGeometry.startAngle + arcGeometry.sweep * 0.5;
     const core::Vec2 arcPoint =
         arcGeometry.center +
