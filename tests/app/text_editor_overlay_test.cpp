@@ -194,6 +194,32 @@ TEST_F(TextEditorTest, EscapeLeavesTheDrawingAsItWas) {
     EXPECT_EQ(std::get<core::Text>(entity(ids().text)).value, "Primo");
 }
 
+TEST_F(TextEditorTest, APropertiesMTextEditSurvivesRefreshAndIsOneUndoStep) {
+    const core::EntityId id = ids().hiddenCode;
+    ASSERT_TRUE(view().editMText(id));
+    view().refreshTextEditor();
+    ASSERT_TRUE(editor()->isOpen());
+    selectAll();
+    events::type(editor(), "Changed");
+    confirm();
+    EXPECT_FALSE(editor()->isOpen());
+    EXPECT_EQ(std::get<core::MText>(entity(id)).value, "Changed");
+    EXPECT_EQ(session().editor().undoName(), "Properties");
+
+    enter("U");
+    EXPECT_EQ(std::get<core::MText>(entity(id)).value, "A\\A1;B");
+}
+
+TEST_F(TextEditorTest, CancellingAPropertiesMTextEditChangesNothing) {
+    const core::EntityId id = ids().fraction;
+    ASSERT_TRUE(view().editMText(id));
+    selectAll();
+    events::type(editor(), "Changed");
+    events::press(editor(), Qt::Key_Escape);
+    EXPECT_FALSE(editor()->isOpen());
+    EXPECT_EQ(std::get<core::MText>(entity(id)).value, "x\\S1/2;y");
+}
+
 TEST_F(TextEditorTest, EnterConfirmsATextOfOneLine) {
     edit(ids().text);
     // A TEXT has no codes: a backslash is a character.

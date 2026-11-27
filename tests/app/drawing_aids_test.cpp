@@ -582,6 +582,15 @@ TEST_F(DrawingAidsTest, SelectedAndHotGripsArePaintedAboveTheDrawing) {
               QColor(style.grip.r, style.grip.g, style.grip.b));
 }
 
+TEST_F(DrawingAidsTest, PanningKeepsTheClosedHandCursorWhileThePointerMoves) {
+    const QPointF start = view()->rect().center();
+    QTest::mousePress(view(), Qt::MiddleButton, {}, start.toPoint());
+    EXPECT_EQ(view()->cursor().shape(), Qt::ClosedHandCursor);
+    QTest::mouseMove(view(), (start + QPointF{20.0, 10.0}).toPoint());
+    EXPECT_EQ(view()->cursor().shape(), Qt::ClosedHandCursor);
+    QTest::mouseRelease(view(), Qt::MiddleButton, {}, (start + QPointF{20.0, 10.0}).toPoint());
+}
+
 TEST_F(DrawingAidsTest, OrthoKeepsTheSecondVertexOnTheAxesOfTheFirst) {
     shortcut(view(), Qt::Key_F8);
     ASSERT_TRUE(aids().ortho);

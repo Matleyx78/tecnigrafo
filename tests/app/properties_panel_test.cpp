@@ -1085,7 +1085,15 @@ TEST_F(PropertiesPanelTest, ASolidBrowsesAndMovesItsCurrentVertex) {
     EXPECT_FALSE(current.data(PropertyGridModel::kPreviousVertexRole).toBool());
     EXPECT_TRUE(current.data(PropertyGridModel::kNextVertexRole).toBool());
 
-    ASSERT_TRUE(model.nextVertex());
+    std::optional<std::pair<EntityId, int>> browsed;
+    QObject::connect(
+        &panel(), &PropertiesPanel::currentVertexChanged, &panel(),
+        [&browsed](EntityId entity, int vertex) { browsed = std::pair{entity, vertex}; });
+    auto* delegate = panel().findChild<PropertyGridDelegate*>();
+    ASSERT_NE(delegate, nullptr);
+    ASSERT_TRUE(QMetaObject::invokeMethod(delegate, "nextVertexRequested", Qt::DirectConnection));
+    EXPECT_EQ(browsed, (std::pair{id, 1}));
+
     const int vertexX =
         model.rowNamed(PropertyGridModel::kGeometryGroup, QStringLiteral("Vertex X"));
     ASSERT_TRUE(

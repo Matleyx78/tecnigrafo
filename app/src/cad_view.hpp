@@ -91,7 +91,7 @@ public:
     /// Draws with `style` from now on: the colours of grid, entities,
     /// preview, selection and snap marker.
     void setStyle(const render::SceneStyle& style);
-    void setCurrentVertex(core::EntityId entity, const core::Vec2& vertex);
+    void setCurrentVertex(core::EntityId entity, int vertex);
     bool editMText(core::EntityId entity);
 
 signals:
@@ -143,7 +143,7 @@ private:
     /// After the viewport, which it keeps a reference to.
     TextEditorOverlay* m_textEditor{nullptr};
     QTimer* m_holdTimer{nullptr};
-    std::optional<std::pair<core::EntityId, core::Vec2>> m_currentVertex;
+    std::optional<std::pair<core::EntityId, int>> m_currentVertex;
     std::optional<core::EntityId> m_propertyText;
 };
 

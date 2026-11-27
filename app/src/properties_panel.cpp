@@ -340,7 +340,7 @@ PropertiesPanel::PropertiesPanel(QWidget* parent)
         if (ids.size() != 1) {
             return;
         }
-        if (auto* view = window()->findChild<CadView*>()) {
+        if (auto* view = parentWidget()->findChild<CadView*>()) {
             view->editMText(ids.front());
         }
     });
@@ -392,20 +392,10 @@ PropertiesPanel::PropertiesPanel(QWidget* parent)
         if (!moved || ids.size() != 1) {
             return;
         }
-        const core::EntityRecord* record = document().find(ids.front());
-        std::optional<core::Vec2> point;
-        if (record != nullptr) {
-            if (const auto* polyline = std::get_if<core::Polyline>(&record->entity)) {
-                point = polyline->vertices()[static_cast<std::size_t>(m_model->currentVertex())]
-                            .position;
-            } else if (const auto* solid = std::get_if<core::Solid>(&record->entity)) {
-                point = solid->vertices.at(static_cast<std::size_t>(m_model->currentVertex()));
-            }
-        }
-        if (point) {
-            if (auto* view = window()->findChild<CadView*>()) {
-                view->setCurrentVertex(ids.front(), *point);
-            }
+        const int vertex = m_model->currentVertex();
+        emit currentVertexChanged(ids.front(), vertex);
+        if (auto* view = parentWidget()->findChild<CadView*>()) {
+            view->setCurrentVertex(ids.front(), vertex);
         }
     };
     connect(m_delegate, &PropertyGridDelegate::previousVertexRequested, this,

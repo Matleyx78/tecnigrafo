@@ -209,6 +209,9 @@ Q_SIGNALS:
     /// shown now lets it go.
     void sessionAboutToChange();
 
+    /// The user browsed to `vertex` of `entity` in Current Vertex.
+    void currentVertexChanged(core::EntityId entity, int vertex);
+
 protected:
     void changeEvent(QEvent* event) override;
 
