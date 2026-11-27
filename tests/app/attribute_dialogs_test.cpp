@@ -8,6 +8,7 @@
 #include "document_session.hpp"
 #include "input_events.hpp"
 #include "main_window.hpp"
+#include "tg/edit/document_tables.hpp"
 
 #include <QCoreApplication>
 #include <QDialogButtonBox>
@@ -73,6 +74,7 @@ TEST(InsertAttributesDialogTest, DoubleClickEditsThePickedInsertAndSupportsUndoA
     ASSERT_NE(session, nullptr);
 
     session->editor().beginTransaction("Setup");
+    session->editor().tables().replaceBlock("ATTRS", core::BlockDefinition{.name = "ATTRS"});
     core::EntityId firstId;
     core::EntityId secondId;
     for (const auto& [x, third] : {std::pair{0.0, "first"}, std::pair{20.0, "second"}}) {
