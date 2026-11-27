@@ -619,7 +619,7 @@ TEST_F(DrawingAidsTest, ArcAndStraightExtensionGuidesArePaintedUntilReleased) {
     [[maybe_unused]] const core::EntityId lineId =
         editor().add(core::Line{{60.0, -60.0}, {70.0, -60.0}});
     editor().commit();
-    window().refresh();
+    view()->update();
     setSnapModes(core::SnapModes{false, false, false, false, false, false, false, false, false,
                                  true, false});
     ASSERT_FALSE(aids().tracking);
@@ -688,13 +688,14 @@ TEST_F(DrawingAidsTest, CurrentVertexCircleFollowsEditsUndoAndSelection) {
     editor().beginTransaction("Properties");
     ASSERT_TRUE(editor().replace(outline, std::move(changed)));
     editor().commit();
-    window().refresh();
+    view()->update();
     EXPECT_FALSE(hasCircleAt(kVertex));
     EXPECT_TRUE(hasCircleAt({100.0, 0.0}));
 
     enter("U");
     EXPECT_TRUE(hasCircleAt(kVertex));
-    ASSERT_TRUE(mutableRunner().replaceSelection({document().entities().at(1).id}));
+    ASSERT_TRUE(
+        mutableRunner().replaceSelection(std::vector<core::EntityId>{document().entities()[1].id}));
     view()->update();
     QCoreApplication::processEvents();
     EXPECT_FALSE(hasCircleAt(kVertex));
