@@ -728,8 +728,8 @@ tracciamento. Passa su un punto riconosciuto dallo snap senza fare clic: il
 punto viene acquisito e il programma mostra una guida orizzontale o verticale.
 Il clic successivo può agganciarsi alla guida o alla loro intersezione. Tornare
 sul punto lo rimuove; iniziare un altro comando o spegnere `F11` cancella i
-punti acquisiti. OTRACK richiede OSNAP attivo e non sostituisce lo snap
-*Prolungamento* e *Parallelo* condividono le acquisizioni con OTRACK: fermarsi
+punti acquisiti. OTRACK richiede OSNAP attivo. *Prolungamento* e *Parallelo*
+condividono le acquisizioni con OTRACK: fermarsi
 su un estremo acquisisce il suo prolungamento, mentre fermarsi su una linea o
 su un segmento diritto acquisisce la direzione parallela. Le guide possono
 incrociarsi fra loro e con quelle già disponibili. Tornare sullo stesso punto

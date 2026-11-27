@@ -41,7 +41,7 @@ Aggiornato alla versione **0.8.1**.
 | `ARC` | `A` | presente | 0.4 | tre punti e inizio-centro-fine nella 0.4, anche dal menu del pulsante del ribbon (0.7.5); le altre varianti dopo la 1.0 |
 | `RECTANG` | `REC` | presente | 0.8.1 | polilinea chiusa con *Chamfer*, *Fillet*, *Width*, *Area*, *Dimensions*, *Rotation*, *Elevation* e *Thickness* |
 | `POLYGON` | `POL` | presente | 0.8.1 | da 3 a 1024 lati, inscritto, circoscritto o definito da *Edge* |
-| `ELLIPSE` | `EL` | presente | 0.8 | asse e fine, *Center*, *Rotation*, *Arc*; manca *Isocircle*; manca l'alias `EL` (0.8.1); `TRIM`, `EXTEND`, `OFFSET` e `FILLET` non accettano ellissi (#663, 0.8.2) |
+| `ELLIPSE` | `EL` | presente | 0.8 | asse e fine, *Center*, *Rotation*, *Arc* e alias `EL`; manca *Isocircle*; `TRIM`, `EXTEND`, `OFFSET` e `FILLET` non accettano ellissi (#663, 0.8.2) |
 | `SPLINE` | `SPL` | assente | 0.8.2 | con `SPLINEDIT` (#888) |
 | `SPLINEDIT` | `SPE` | assente | 0.8.2 | completo, come la `SPLINE` (#888) |
 | `POINT` | `PO` | assente | — | |
@@ -71,7 +71,7 @@ Aggiornato alla versione **0.8.1**.
 | `HPISLANDDETECTION` | | completo | 0.8 | *Normal*, *Outer*, *Ignore* |
 | `HATCHEDIT` | `HE` | presente | 0.8.1 | `-HATCHEDIT` con *Properties*, *Origin* e *Style*; mancano contorni, associatività e ordine di disegno |
 | `BLOCK` | `B` | presente | 0.8 | `-BLOCK` (anche `BLOCK`): nome, punto base e oggetti, ridefinizione; manca la finestra |
-| `INSERT` | `I` | presente | 0.8 | `-INSERT` (anche `INSERT`) di un blocco o di un file DXF, `nome=file`, *Basepoint*, *Scale* (*Corner*, *XYZ*), *Rotate*; attributi ai valori predefiniti, senza domande; mancano la finestra e le domande degli attributi |
+| `INSERT` | `I` | presente | 0.8 | `-INSERT` (anche `INSERT`) di un blocco o file DXF, `nome=file`, *Basepoint*, *Scale* (*Corner*, *XYZ*) e *Rotate*; dalla 0.8.1 chiede gli attributi secondo `ATTREQ`; manca la finestra |
 | `ATTDEF` | `ATT` | presente | 0.8.1 | `-ATTDEF` dalla riga di comando; niente attributi multiriga |
 | `ATTEDIT` | `ATE` | presente | 0.8.1 | `-ATTEDIT` uno per uno e globale; manca `EATTEDIT` completo |
 | `ATTSYNC` | | presente | 0.8.1 | per nome o inserimento; aggiorna tutti gli inserimenti della definizione |
