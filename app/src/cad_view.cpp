@@ -180,7 +180,7 @@ void CadView::refreshTextEditor() {
     // A properties edit is owned by the panel, not by the command runner.  An
     // ordinary window refresh must therefore not dismiss it merely because
     // the runner has no request of its own.
-    if (m_propertyText && !request) {
+    if (m_propertyText && !request && m_session != nullptr && !m_session->runner().isActive()) {
         m_dynamicInput->hide();
         return;
     }
@@ -244,7 +244,7 @@ void CadView::confirmPropertyText(core::EntityId id) {
     const auto* old = record != nullptr ? std::get_if<core::MText>(&record->entity) : nullptr;
     m_propertyText.reset();
     closeTextEditor();
-    if (old != nullptr && value != old->value) {
+    if (old != nullptr && value != old->value && !m_session->editor().inTransaction()) {
         core::MText changed = *old;
         changed.value = value;
         m_session->editor().beginTransaction("Properties");

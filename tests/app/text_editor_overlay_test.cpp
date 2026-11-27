@@ -221,6 +221,20 @@ TEST_F(TextEditorTest, CancellingAPropertiesMTextEditChangesNothing) {
     EXPECT_EQ(std::get<core::MText>(entity(id)).value, "x\\S1/2;y");
 }
 
+TEST_F(TextEditorTest, StartingACommandCancelsAPropertiesMTextEdit) {
+    const core::EntityId id = ids().fraction;
+    const std::string before = std::get<core::MText>(entity(id)).value;
+    ASSERT_TRUE(view().editMText(id));
+    selectAll();
+    events::type(editor(), "Changed");
+
+    enter("LINE");
+
+    EXPECT_FALSE(editor()->isOpen());
+    EXPECT_TRUE(runner().isActive());
+    EXPECT_EQ(std::get<core::MText>(entity(id)).value, before);
+}
+
 TEST_F(TextEditorTest, EnterConfirmsATextOfOneLine) {
     edit(ids().text);
     // A TEXT has no codes: a backslash is a character.

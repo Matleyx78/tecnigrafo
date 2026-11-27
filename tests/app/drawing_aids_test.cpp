@@ -5,11 +5,14 @@
 #include "command_line.hpp"
 #include "input_events.hpp"
 #include "main_window.hpp"
+#include "settings_dialog.hpp"
 #include "theme.hpp"
 
 #include <QAction>
 #include <QColor>
+#include <QComboBox>
 #include <QCoreApplication>
+#include <QDialogButtonBox>
 #include <QFileInfo>
 #include <QImage>
 #include <QLabel>
@@ -119,6 +122,10 @@ protected:
     void setPolar(bool on) { m_window.setPolar(on); }
 
     [[nodiscard]] const cmd::CommandRunner& runner() const { return m_window.runner(); }
+
+    [[nodiscard]] cmd::CommandRunner& mutableRunner() { return m_window.activeSession()->runner(); }
+
+    [[nodiscard]] edit::Editor& editor() { return m_window.activeSession()->editor(); }
 
     [[nodiscard]] QAction* action(const char* name) const {
         return m_window.findChild<QAction*>(QString::fromLatin1(name));
@@ -238,6 +245,19 @@ protected:
             }
         }
         return count;
+    }
+
+    void setSnapMagnet(bool on) {
+        QTimer::singleShot(0, &m_window, [this, on] {
+            auto* dialog = m_window.findChild<SettingsDialog*>();
+            ASSERT_NE(dialog, nullptr);
+            auto* magnet = dialog->findChild<QComboBox*>(QStringLiteral("snapMagnetCombo"));
+            ASSERT_NE(magnet, nullptr);
+            magnet->setCurrentIndex(on ? 0 : 1);
+            dialog->findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Ok)->click();
+        });
+        action("tools.settings")->trigger();
+        ASSERT_EQ(m_window.snapMagnet(), on);
     }
 
 private:
@@ -589,6 +609,131 @@ TEST_F(DrawingAidsTest, PanningKeepsTheClosedHandCursorWhileThePointerMoves) {
     QTest::mouseMove(view(), (start + QPointF{20.0, 10.0}).toPoint());
     EXPECT_EQ(view()->cursor().shape(), Qt::ClosedHandCursor);
     QTest::mouseRelease(view(), Qt::MiddleButton, {}, (start + QPointF{20.0, 10.0}).toPoint());
+}
+
+TEST_F(DrawingAidsTest, ArcAndStraightExtensionGuidesArePaintedUntilReleased) {
+    view()->setView({90.0, -50.0}, 0.2);
+    editor().beginTransaction("Test geometry");
+    [[maybe_unused]] const core::EntityId arcId =
+        editor().add(core::Arc{{100.0, -60.0}, 20.0, 0.0, core::kPi / 2.0});
+    [[maybe_unused]] const core::EntityId lineId =
+        editor().add(core::Line{{60.0, -60.0}, {70.0, -60.0}});
+    editor().commit();
+    window().refresh();
+    setSnapModes(core::SnapModes{false, false, false, false, false, false, false, false, false,
+                                 true, false});
+    ASSERT_FALSE(aids().tracking);
+    enter("LINE");
+    mutableRunner().pointerHeld({100.0, -40.0});
+    mutableRunner().pointerHeld({70.0, -60.0});
+    mutableRunner().pointerMoved({80.3, -59.8});
+    view()->update();
+    QCoreApplication::processEvents();
+
+    const auto& guides = runner().tracking().guides;
+    ASSERT_EQ(guides.size(), 2U);
+    const auto arc = std::find_if(guides.begin(), guides.end(),
+                                  [](const auto& guide) { return guide.arc.has_value(); });
+    const auto straight = std::find_if(guides.begin(), guides.end(),
+                                       [](const auto& guide) { return !guide.arc.has_value(); });
+    ASSERT_NE(arc, guides.end());
+    ASSERT_NE(straight, guides.end());
+    const double middleAngle = arc->arc->startAngle + arc->arc->sweep * 0.5;
+    const core::Vec2 arcPoint =
+        arc->arc->center +
+        core::Vec2{std::cos(middleAngle), std::sin(middleAngle)} * arc->arc->radius;
+    const QPoint arcPixel = screen(arcPoint).toPoint();
+    const QPoint straightPixel = screen(straight->origin + straight->direction * 0.5).toPoint();
+    EXPECT_GT(markerPixelsIn(QRect{arcPixel - QPoint{2, 2}, QSize{5, 5}}), 0U);
+    EXPECT_GT(markerPixelsIn(QRect{straightPixel - QPoint{2, 2}, QSize{5, 5}}), 0U);
+
+    mutableRunner().pointerHeld({100.0, -40.0});
+    mutableRunner().pointerHeld({70.0, -60.0});
+    mutableRunner().pointerMoved({80.3, -59.8});
+    view()->update();
+    QCoreApplication::processEvents();
+    EXPECT_TRUE(runner().tracking().guides.empty());
+    EXPECT_EQ(markerPixelsIn(QRect{arcPixel - QPoint{2, 2}, QSize{5, 5}}), 0U);
+    EXPECT_EQ(markerPixelsIn(QRect{straightPixel - QPoint{2, 2}, QSize{5, 5}}), 0U);
+}
+
+TEST_F(DrawingAidsTest, CurrentVertexCircleFollowsEditsUndoAndSelection) {
+    view()->setView({70.0, 30.0}, 1.0);
+    const core::EntityId outline = document().entities().front().id;
+    ASSERT_TRUE(mutableRunner().replaceSelection({outline}));
+    view()->setCurrentVertex(outline, 1);
+    const render::Color highlightColor = sceneStyle(window().theme()).highlight;
+    const QColor highlight(highlightColor.r, highlightColor.g, highlightColor.b);
+    const auto hasCircleAt = [&](const core::Vec2& point) {
+        const QPoint center = screen(point).toPoint();
+        const QImage image = view()->grab().toImage();
+        std::size_t count = 0;
+        for (int y = center.y() - 9; y <= center.y() + 9; ++y) {
+            for (int x = center.x() - 9; x <= center.x() + 9; ++x) {
+                const int squared =
+                    (x - center.x()) * (x - center.x()) + (y - center.y()) * (y - center.y());
+                if (squared >= 36 && squared <= 100 && image.pixelColor(x, y) == highlight) {
+                    ++count;
+                }
+            }
+        }
+        return count > 12;
+    };
+    EXPECT_TRUE(hasCircleAt(kVertex));
+
+    const auto& old = std::get<core::Polyline>(document().find(outline)->entity);
+    std::vector<core::PolylineVertex> vertices(old.vertices().begin(), old.vertices().end());
+    vertices.at(1).position = {100.0, 0.0};
+    core::Polyline changed(std::move(vertices), old.isClosed());
+    editor().beginTransaction("Properties");
+    ASSERT_TRUE(editor().replace(outline, std::move(changed)));
+    editor().commit();
+    window().refresh();
+    EXPECT_FALSE(hasCircleAt(kVertex));
+    EXPECT_TRUE(hasCircleAt({100.0, 0.0}));
+
+    enter("U");
+    EXPECT_TRUE(hasCircleAt(kVertex));
+    ASSERT_TRUE(mutableRunner().replaceSelection({document().entities().at(1).id}));
+    view()->update();
+    QCoreApplication::processEvents();
+    EXPECT_FALSE(hasCircleAt(kVertex));
+}
+
+TEST_F(DrawingAidsTest, HatchSourcesAreHighlightedOnlyWhileTheCommandRuns) {
+    view()->setView({70.0, 30.0}, 1.0);
+    enter("-HATCH");
+    click({30.0, 22.0});
+    ASSERT_FALSE(runner().highlighted().empty());
+    const QPoint bottom = screen({60.0, 0.0}).toPoint();
+    const render::Color highlightColor = sceneStyle(window().theme()).highlight;
+    const QColor highlight(highlightColor.r, highlightColor.g, highlightColor.b);
+    EXPECT_EQ(view()->grab().toImage().pixelColor(bottom), highlight);
+
+    events::press(input(), Qt::Key_Return);
+    EXPECT_TRUE(runner().highlighted().empty());
+    EXPECT_NE(view()->grab().toImage().pixelColor(bottom), highlight);
+}
+
+TEST_F(DrawingAidsTest, SnapMagnetMovesOnlyTheDrawnCursorToTheSnap) {
+    view()->setView({70.0, 30.0}, 1.0);
+    setSnapMagnet(false);
+    enter("LINE");
+    const QPointF nearVertex = screen(kVertex) + QPointF{3.0, 4.0};
+    moveScreen(nearVertex);
+    ASSERT_TRUE(runner().activeSnap());
+    EXPECT_NE(view()->cursor().shape(), Qt::BlankCursor);
+    const QPoint arm = screen(kVertex).toPoint() + QPoint{0, 20};
+    const QColor cursor = window().theme() == Theme::Dark ? Qt::white : Qt::black;
+    EXPECT_NE(view()->grab().toImage().pixelColor(arm), cursor);
+
+    events::press(input(), Qt::Key_Escape);
+    setSnapMagnet(true);
+    enter("LINE");
+    moveScreen(nearVertex);
+    ASSERT_TRUE(runner().activeSnap());
+    EXPECT_EQ(view()->cursor().shape(), Qt::BlankCursor);
+    EXPECT_EQ(view()->grab().toImage().pixelColor(arm), cursor);
 }
 
 TEST_F(DrawingAidsTest, OrthoKeepsTheSecondVertexOnTheAxesOfTheFirst) {
