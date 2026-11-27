@@ -666,10 +666,14 @@ TEST_F(DrawingAidsTest, ArcAndStraightExtensionGuidesArePaintedUntilReleased) {
                                        [](const auto& guide) { return !guide.arc.has_value(); });
     ASSERT_NE(arc, guides.end());
     ASSERT_NE(straight, guides.end());
-    const double middleAngle = arc->arc->startAngle + arc->arc->sweep * 0.5;
+    if (!arc->arc.has_value()) {
+        FAIL() << "arc guide has no arc geometry";
+    }
+    const core::ArcGeometry& arcGeometry = arc->arc.value();
+    const double middleAngle = arcGeometry.startAngle + arcGeometry.sweep * 0.5;
     const core::Vec2 arcPoint =
-        arc->arc->center +
-        core::Vec2{std::cos(middleAngle), std::sin(middleAngle)} * arc->arc->radius;
+        arcGeometry.center +
+        core::Vec2{std::cos(middleAngle), std::sin(middleAngle)} * arcGeometry.radius;
     const QPoint arcPixel = screen(arcPoint).toPoint();
     const QPoint straightPixel = screen(straight->origin + straight->direction * 0.5).toPoint();
     const QRect arcArea{arcPixel - QPoint{12, 12}, QSize{25, 25}};
