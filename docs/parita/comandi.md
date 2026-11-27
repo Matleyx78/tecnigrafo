@@ -23,13 +23,13 @@ catalogo dice quanto resta al lavoro reale.
 
 ## Riepilogo
 
-Aggiornato alla versione **0.8**.
+Aggiornato alla versione **0.8.1**.
 
 | Stato | Comandi |
 |---|---|
 | completo | 20 |
-| presente | 36 |
-| assente | 34 |
+| presente | 45 |
+| assente | 25 |
 
 ## Disegno
 
@@ -39,8 +39,8 @@ Aggiornato alla versione **0.8**.
 | `PLINE` | `PL` | presente | 0.4 | archi tangenti, *Arc*, *Line*, *CLose* nella 0.4; mancano *Width*, *Halfwidth*, *Length* e le varianti dell'arco (*Angle*, *CEnter*, *Radius*…), dopo la 1.0 (decisione del 2026-10-28) |
 | `CIRCLE` | `C` | completo | 0.4 | centro e raggio o diametro, `2P`, `3P` nella 0.4; tangente-tangente-raggio (*Ttr*) nella 0.7; le cinque varianti nel menu del pulsante del ribbon (0.7.5) |
 | `ARC` | `A` | presente | 0.4 | tre punti e inizio-centro-fine nella 0.4, anche dal menu del pulsante del ribbon (0.7.5); le altre varianti dopo la 1.0 |
-| `RECTANG` | `REC` | assente | 0.8.1 | |
-| `POLYGON` | `POL` | assente | 0.8.1 | |
+| `RECTANG` | `REC` | presente | 0.8.1 | polilinea chiusa con *Chamfer*, *Fillet*, *Width*, *Area*, *Dimensions*, *Rotation*, *Elevation* e *Thickness* |
+| `POLYGON` | `POL` | presente | 0.8.1 | da 3 a 1024 lati, inscritto, circoscritto o definito da *Edge* |
 | `ELLIPSE` | `EL` | presente | 0.8 | asse e fine, *Center*, *Rotation*, *Arc*; manca *Isocircle*; manca l'alias `EL` (0.8.1); `TRIM`, `EXTEND`, `OFFSET` e `FILLET` non accettano ellissi (#663, 0.8.2) |
 | `SPLINE` | `SPL` | assente | 0.8.2 | con `SPLINEDIT` (#888) |
 | `SPLINEDIT` | `SPE` | assente | 0.8.2 | completo, come la `SPLINE` (#888) |
@@ -57,10 +57,10 @@ Aggiornato alla versione **0.8**.
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
 | `TEXT` | `DT`, `DTEXT` | presente | 0.4 | una o più righe, codici speciali DXF; negli script una riga sola, come AutoCAD (0.7); usa lo stile corrente (0.8); mancano le opzioni *Justify* e *Style* |
-| `MTEXT` | `T`, `MT` | presente | 0.8 | dalla riga di comando, con *Height*, *Justify*, *Line spacing*, *Rotation*, *Style*, *Width*; i codici di formato si mostrano come testo; mancano l'editor nella finestra e `TEXTEDIT` (idea #662) |
+| `MTEXT` | `T`, `MT` | presente | 0.8 | editor nella finestra e formati nella 0.8.1; colonne, tabulazioni e rientri restano conservati ma non interpretati |
 | `STYLE` | `ST` | presente | 0.8 | `-STYLE` (anche `STYLE`) dalla riga di comando: font, altezza fissa, larghezza, obliquo, rovesciato e capovolto; manca la finestra degli stili |
 | `TEXTSTYLE` | | completo | 0.8 | stile di testo corrente |
-| `TEXTEDIT` | `ED`, `DDEDIT` | assente | 0.8.1 | testi, `MTEXT` nell'editor con i formati, quote, attributi (#662) |
+| `TEXTEDIT` | `ED`, `DDEDIT` | presente | 0.8.1 | testi, `MTEXT` nell'editor con i formati, quote e attributi; negli script usa la riga di comando |
 | `DIMLINEAR` | `DLI`, `DIMLIN` | presente | 0.8 | due punti o un oggetto, *Mtext*, *Text*, *Angle*, *Horizontal*, *Vertical*, *Rotated* |
 | `DIMALIGNED` | `DAL`, `DIMALI` | presente | 0.8 | *Mtext*, *Text* e *Angle* |
 | `DIMANGULAR` | `DAN`, `DIMANG` | presente | 0.8 | due linee, arco, cerchio o tre punti, *Mtext*, *Text*, *Angle*, *Quadrant* |
@@ -69,14 +69,14 @@ Aggiornato alla versione **0.8**.
 | `DIMSTYLE` | `D` | presente | 0.8 | `-DIMSTYLE` (anche `DIMSTYLE`) con *Save*, *Restore*, *STatus* e `?`, e le variabili di quota come comandi; una quota con adattamento diverso da `ISO-25` non si rigenera; mancano la finestra degli stili, *Variables* e *Apply* |
 | `HATCH` | `H` | presente | 0.8 | `-HATCH` (anche `HATCH`) con un punto interno o *Select objects*, motivi `ANSI31`, `SOLID` e `NET`, scala e angolo; non associativo; contorni solo fra linee, archi, cerchi e polilinee; i retini di AutoCAD con altri motivi si leggono e si vedono; manca la finestra |
 | `HPISLANDDETECTION` | | completo | 0.8 | *Normal*, *Outer*, *Ignore* |
-| `HATCHEDIT` | `HE` | assente | 0.8.1 | `-HATCHEDIT` con *Properties*, *Origin*, *Style* (#913) |
+| `HATCHEDIT` | `HE` | presente | 0.8.1 | `-HATCHEDIT` con *Properties*, *Origin* e *Style*; mancano contorni, associatività e ordine di disegno |
 | `BLOCK` | `B` | presente | 0.8 | `-BLOCK` (anche `BLOCK`): nome, punto base e oggetti, ridefinizione; manca la finestra |
 | `INSERT` | `I` | presente | 0.8 | `-INSERT` (anche `INSERT`) di un blocco o di un file DXF, `nome=file`, *Basepoint*, *Scale* (*Corner*, *XYZ*), *Rotate*; attributi ai valori predefiniti, senza domande; mancano la finestra e le domande degli attributi |
-| `ATTDEF` | `ATT` | assente | 0.8.1 | `-ATTDEF` dalla riga di comando |
-| `ATTEDIT` | `ATE` | assente | 0.8.1 | `-ATTEDIT` uno per uno e globale |
-| `ATTSYNC` | | assente | 0.8.1 | |
-| `BATTMAN` | | assente | 0.8.1 | |
-| `ATTDISP` | | assente | 0.8.1 | |
+| `ATTDEF` | `ATT` | presente | 0.8.1 | `-ATTDEF` dalla riga di comando; niente attributi multiriga |
+| `ATTEDIT` | `ATE` | presente | 0.8.1 | `-ATTEDIT` uno per uno e globale; manca `EATTEDIT` completo |
+| `ATTSYNC` | | presente | 0.8.1 | per nome o inserimento; aggiorna tutti gli inserimenti della definizione |
+| `BATTMAN` | | presente | 0.8.1 | modifica, riordina, elimina e sincronizza le definizioni; niente estrazione dati |
+| `ATTDISP` | | presente | 0.8.1 | *Normal*, *ON* e *OFF* |
 | `WBLOCK` | `W` | assente | — | |
 
 ## Modifica
@@ -163,13 +163,13 @@ parte.
 
 | Aiuto | Tasto | Stato | Tappa | Note |
 |---|---|---|---|---|
-| Snap a oggetto | `F3` | presente | 0.3 | estremo, medio, centro, inserimento nella 0.3; intersezione, perpendicolare, tangente, quadrante nella 0.7; sulle entità della 0.8, anche dentro i blocchi; mancano vicino, prolungamento e parallelo (#665, 0.8.1), nodo, le intersezioni apparenti e prolungate |
-| Tracciamento degli snap a oggetto | `F11` | presente | 0.8 | acquisizione fermandosi sopra un punto, guide orizzontali e verticali, incroci di due guide e con il polare, distanza scritta lungo una guida; mancano le guide polari dai punti acquisiti (`POLARMODE`), `TRACKPATH`; gli snap *Prolungamento* e *Parallelo* nella 0.8.1 |
+| Snap a oggetto | `F3` | presente | 0.3 | nella 0.8.1 anche vicino, prolungamento e parallelo; mancano nodo e intersezioni apparenti e prolungate |
+| Tracciamento degli snap a oggetto | `F11` | presente | 0.8 | nella 0.8.1 anche guide di prolungamento e parallele; mancano le guide polari dai punti acquisiti (`POLARMODE`) e `TRACKPATH` |
 | Orto | `F8` | completo | 0.3 | |
-| Griglia | `F7` | assente | 0.8.1 | oggi sempre accesa, con il passo che segue lo zoom; `GRID`, `GRIDMODE`, `GRIDUNIT` e la `VPORT` del DXF nella 0.8.1 (#664) |
-| Snap alla griglia | `F9` | assente | 0.8.1 | `SNAP`, `SNAPMODE`, `SNAPUNIT` (#664) |
-| Icona dell'UCS | | assente | 0.8.1 | `UCSICON`; oggi due rette per l'origine (#664) |
+| Griglia | `F7` | presente | 0.8.1 | `GRID`, passo fisso, adattiva e suddivisioni; mancano griglia a punti e rotazione con `SNAPANG` |
+| Snap alla griglia | `F9` | presente | 0.8.1 | `SNAP`, passo e base; stile isometrico e snap polare sono conservati ma senza effetto |
+| Icona dell'UCS | | presente | 0.8.1 | `UCSICON` accesa o spenta, all'origine o nell'angolo; solo UCS 2D |
 | Tracciamento polare | `F10` | presente | 0.7 | incremento con `POLARANG`, distanza scritta lungo la semiretta; mancano gli angoli aggiuntivi |
-| Selezione: clic, finestra, intersezione | | presente | 0.3 | anche trascinando (0.7); selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Fence* e i poligoni; *Last* e *Previous* nella 0.8.1 |
+| Selezione: clic, finestra, intersezione | | presente | 0.3 | anche trascinando, con `W`, `C`, `ALL`, *Last* e *Previous*; mancano *Fence* e i poligoni |
 | Grip | | presente | 0.7 | stiramento su linee, archi, cerchi, polilinee e testi; mancano le modalità *Move*, *Rotate*, *Scale*, *Mirror*, più grip caldi e il menu dei grip |
-| Immissione dinamica | `F12` | presente | 0.7.5 | domanda del comando, coordinate e, dopo il primo punto, lunghezza e angolo vicino al cursore, con `Tab` e `Invio`; manca la variabile `DYNMODE` |
+| Immissione dinamica | `F12` | presente | 0.7.5 | domanda, coordinate, lunghezza e angolo, con `Tab`, `Invio` e prefisso assoluto `#` nella 0.8.1; manca `DYNMODE` |

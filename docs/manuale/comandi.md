@@ -2030,6 +2030,89 @@ Tecnigrafo rigenera soltanto le combinazioni compatibili con lo stile `ISO-25`. 
 
 Le ellissi si leggono, si scrivono, si mostrano e possono nascere da blocchi a scala non uniforme. In questa tappa `TRIM`, `EXTEND`, `OFFSET`, `FILLET` e gli altri comandi di modifica geometrica non le accettano. Lo snap *Vicino* (*Nearest*) non è disponibile; usa gli snap ai punti notevoli elencati sopra.
 
+## ELLIPSE — ellissi e archi ellittici
+
+`ELLIPSE` (alias `EL`) crea un'ellisse indicando i due estremi dell'asse
+maggiore e la distanza dell'altro semiasse. L'opzione *Center* parte invece
+dal centro; *Rotation* determina il rapporto fra gli assi mediante un angolo.
+Con *Arc* si indicano anche gli angoli iniziale e finale e nasce un arco
+ellittico. *Isocircle* non è disponibile. Le ellissi non sono ancora accettate
+da `TRIM`, `EXTEND`, `OFFSET` e `FILLET`.
+
+## RECTANG e POLYGON — polilinee chiuse regolari
+
+`RECTANG` (alias `REC`) crea una `LWPOLYLINE` chiusa fra due angoli. Prima del
+secondo angolo si possono impostare *Chamfer*, *Fillet* e *Width*; *Dimensions*
+fissa base e altezza, *Area* calcola una dimensione da area e altra dimensione,
+e *Rotation* ruota il rettangolo. *Elevation* e *Thickness* sono conservate
+nelle proprietà della polilinea, pur restando il disegno bidimensionale.
+
+`POLYGON` (alias `POL`) chiede da 3 a 1024 lati. Con centro e raggio crea il
+poligono *Inscribed* o *Circumscribed*; *Edge* usa invece i due estremi di un
+lato. Anche il risultato di questo comando è una `LWPOLYLINE` chiusa.
+
+## Testo formattato e TEXTEDIT
+
+`MTEXT` apre nella finestra un editor ruotato e in scala con il testo: `Invio`
+crea un paragrafo, `Ctrl+Invio` o un clic fuori confermano ed `Esc` annulla. La
+barra dei formati applica grassetto, corsivo, sottolineato, sopralineato,
+barrato, altezza, colore, larghezza, obliquo e spaziatura; gestisce anche le
+frazioni impilate. I codici non visualizzati, comprese colonne, tabulazioni e
+rientri, vengono conservati. Qualunque font scelto nello stile o con `\f` è
+disegnato con Liberation Sans (Regular, Bold, Italic o BoldItalic): per questo
+le misure possono differire da AutoCAD con Arial.
+
+`TEXTEDIT` (alias `ED`, anche `DDEDIT`) modifica `TEXT`, `MTEXT`, testo delle
+quote, definizioni e valori degli attributi. *Mode* sceglie fra una sola
+annotazione e modifiche multiple; in modalità multipla *Undo* annulla l'ultima
+modifica del comando. Nella finestra, il doppio clic offre lo stesso editor;
+negli script il comando chiede il valore e conserva quello corrente con
+`Invio`. Svuotare e confermare un testo esistente lo lascia invariato; una
+quota vuota torna alla misura (`<>`).
+
+## Attributi dei blocchi
+
+`-ATTDEF` (alias `ATT`, anche `ATTDEF`) crea una definizione con etichetta,
+richiesta, valore predefinito e testo. I modi *Invisible*, *Constant*, *Verify*,
+*Preset* e *Lock position* si scelgono nel comando; `AFLAGS` conserva i modi
+per la definizione successiva. Con `ATTREQ` a 1, `-INSERT` chiede i valori non
+costanti e non preimpostati e verifica quelli marcati *Verify*; con 0 usa i
+predefiniti senza domande.
+
+`-ATTEDIT` (alias `ATE`, anche `ATTEDIT`) filtra per blocco, etichetta e valore.
+Può modificare gli attributi uno per uno (valore, posizione, altezza, angolo,
+stile, layer e colore) oppure sostituire testo globalmente; la posizione,
+l'altezza e l'angolo di un attributo bloccato non cambiano. `ATTSYNC` aggiorna
+tutti gli inserimenti di una definizione: mantiene i valori con la stessa
+etichetta, aggiunge i nuovi attributi e rimuove quelli eliminati.
+
+`BATTMAN` apre la finestra per modificare, riordinare o eliminare le definizioni
+e per sincronizzare gli inserimenti. `ATTDISP` sceglie *Normal*, *ON* o *OFF*
+per mostrare rispettivamente gli attributi visibili, tutti o nessuno.
+Attributi multiriga, estrazione dei dati ed `EATTEDIT` completo restano fuori.
+
+## Griglia, snap alla griglia e icona dell'UCS
+
+`F7` o `GRID` controllano la griglia; `F9` o `SNAP` controllano lo snap alla
+griglia. `GRID` offre *ON*, *OFF*, *Snap*, *Major*, *aDaptive* e *Aspect*;
+`SNAP` offre *ON*, *OFF* e *Aspect*. Le variabili `GRIDMODE`, `GRIDUNIT`,
+`GRIDDISPLAY`, `GRIDMAJOR`, `SNAPMODE`, `SNAPUNIT` e `SNAPBASE` sono comandi e
+appartengono al disegno. Uno snap a oggetto prevale sul nodo della griglia e
+le coordinate digitate non vengono arrotondate.
+
+`UCSICON` accende o spegne l'icona e la colloca all'origine oppure nell'angolo
+della vista con *ORigin* e *Noorigin*. `SNAPANG` e lo stile isometrico letti da
+un DXF vengono conservati, ma non hanno effetto: griglia e snap restano
+allineati agli assi. Non sono disponibili la griglia a punti e lo snap polare.
+
+## -HATCHEDIT — modificare un retino
+
+`-HATCHEDIT` (alias `HE`, anche `HATCHEDIT`) sceglie un retino e ne modifica
+motivo, scala e angolo con *Properties*, l'origine con *Origin* e la regola
+delle isole con *Style*. Contorni, associatività e ordine di disegno non sono
+modificabili. Durante `-HATCH`, i contorni e le isole individuati oppure gli
+oggetti scelti restano evidenziati fino alla conferma o all'annullamento.
+
 ## Comandi dell'applicazione
 
 Nell'applicazione desktop sono disponibili comandi dedicati alla gestione dell'interfaccia

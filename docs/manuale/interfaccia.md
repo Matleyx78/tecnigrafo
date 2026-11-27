@@ -538,6 +538,8 @@ il suggerimento (*tooltip*) con il nome completo e la relativa scorciatoia:
 | Icona / Interruttore | Tasto / Azione | Modalità controllata |
 |---|---|---|
 | **ORTHO** | `F8` | Modalità ortogonale: vincola il puntatore a movimenti rigorosamente orizzontali o verticali |
+| **GRID** | `F7` | Griglia del disegno, con passo fisso e suddivisioni adattive |
+| **SNAP** | `F9` | Snap dei punti ai nodi della griglia |
 | **POLAR** | `F10` | Tracciamento polare: proietta guide e allineamenti ad angoli incrementali (`POLARANG`) |
 | **OSNAP** | `F3` | Snap ad oggetto: aggancio geometrico ai punti notevoli delle entità |
 | **LWT** | `LWDISPLAY` | Visualizzazione spessori: mostra a schermo gli spessori reali delle linee anziché un tratto uniforme |
@@ -686,9 +688,18 @@ Caratteristiche:
 
 ---
 
-## Snap a intersezione, tangente, perpendicolare e quadrante
+## Griglia, snap alla griglia e icona dell'UCS
 
-Lo snap a oggetto geometrico comprende otto modalità di aggancio ai punti notevoli:
+La griglia si attiva con `F7` o **GRID** e usa il passo salvato nel disegno;
+quando è adattiva può mostrare suddivisioni coerenti con lo zoom. `F9` o
+**SNAP** agganciano i punti ai suoi nodi. Uno snap a oggetto ha la precedenza,
+mentre le coordinate scritte restano esatte. Nell'angolo della vista, oppure
+all'origine quando visibile, l'icona dell'UCS mostra le frecce X e Y. Questi
+stati vengono letti e riscritti anche nella `VPORT` attiva dei DXF.
+
+## Snap a oggetto
+
+Lo snap a oggetto geometrico comprende anche i modi seguenti:
 
 | Modo | Azione / Menu *Tools → Object Snap Modes* | Punto di aggancio | Marcatore a schermo |
 |---|---|---|---|
@@ -700,6 +711,9 @@ Lo snap a oggetto geometrico comprende otto modalità di aggancio ai punti notev
 | *Perpendicular* | `aids.snap.perpendicular` | Piede della perpendicolare dal punto base alla curva | Simbolo perpendicolare (⊥) |
 | *Tangent* | `aids.snap.tangent` | Punto di tangenza dal punto base a cerchi o archi | Cerchio con linea tangente in alto |
 | *Quadrant* | `aids.snap.quadrant` | Punti cardinali (0°, 90°, 180°, 270°) di cerchi e archi | Rombo |
+| *Nearest* | `aids.snap.nearest` | Punto più vicino sulla geometria, esclusi i testi | Doppio triangolo |
+| *Extension* | `aids.snap.extension` | Prolungamento acquisito dall'estremo di linea, arco o polilinea aperta | Linea di prolungamento |
+| *Parallel* | `aids.snap.parallel` | Parallela dal punto base alla direzione acquisita | Linee parallele |
 
 Tutti i candidati entro l'apertura di 10 pixel competono tra loro e viene selezionato il
 più vicino al puntatore. Lo snap si attiva con il tasto funzione `F3` o con
@@ -715,7 +729,20 @@ punto viene acquisito e il programma mostra una guida orizzontale o verticale.
 Il clic successivo può agganciarsi alla guida o alla loro intersezione. Tornare
 sul punto lo rimuove; iniziare un altro comando o spegnere `F11` cancella i
 punti acquisiti. OTRACK richiede OSNAP attivo e non sostituisce lo snap
-*Vicino*, che non è disponibile.
+*Prolungamento* e *Parallelo* condividono le acquisizioni con OTRACK: fermarsi
+su un estremo acquisisce il suo prolungamento, mentre fermarsi su una linea o
+su un segmento diritto acquisisce la direzione parallela. Le guide possono
+incrociarsi fra loro e con quelle già disponibili. Tornare sullo stesso punto
+rilascia l'acquisizione. *Nodo* e intersezione apparente non sono disponibili.
+
+## Selezioni recenti e coordinate assolute
+
+Durante una richiesta di selezione, *Last* sceglie l'ultima entità creata e
+*Previous* riusa l'ultimo insieme di selezione. Nell'immissione dinamica il
+prefisso `#` forza coordinate assolute (e `*` è accettato come equivalente),
+senza cambiare la sintassi normale della riga di comando. L'opzione **Snap
+magnet** nelle impostazioni decide se il puntatore viene attirato verso il
+marcatore dello snap.
 
 ## Tracciamento polare (POLAR)
 
