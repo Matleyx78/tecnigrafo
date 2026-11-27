@@ -6,6 +6,7 @@
 #include "cad_view.hpp"
 #include "command_line.hpp"
 #include "document_session.hpp"
+#include "input_events.hpp"
 #include "main_window.hpp"
 
 #include <QCoreApplication>
@@ -101,6 +102,7 @@ TEST(InsertAttributesDialogTest, DoubleClickEditsThePickedInsertAndSupportsUndoA
     const auto doubleClickSecond = [&window] {
         const core::Vec2 screen = window.view()->viewport().worldToScreen({20.0, 0.0});
         const QPointF local{screen.x, screen.y};
+        events::click(window.view(), Qt::LeftButton, local.toPoint());
         QMouseEvent event(QEvent::MouseButtonDblClick, local, window.view()->mapToGlobal(local),
                           Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         QCoreApplication::sendEvent(window.view(), &event);
