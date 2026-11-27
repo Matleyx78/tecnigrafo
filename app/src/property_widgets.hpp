@@ -9,6 +9,7 @@
 #include <QIcon>
 #include <QPalette>
 #include <QString>
+#include <QStringList>
 
 #include <vector>
 
@@ -110,6 +111,26 @@ Q_SIGNALS:
 
 private:
     int m_value{core::lineweight::kByLayer};
+};
+
+/// The values of an own property that is a Choice or a Flag, for the row
+/// `row` of the group `group` of the grid of the panel Properties. As the
+/// other combos, setValue() never emits valueChosen; only user activation
+/// does.
+class ChoiceCombo final : public QComboBox {
+    Q_OBJECT
+
+public:
+    ChoiceCombo(int group, int row, QWidget* parent = nullptr);
+    /// Lists `choices` and shows `value` among them.
+    void setValue(const QStringList& choices, const QString& value);
+
+Q_SIGNALS:
+    void valueChosen(int group, int row, const QString& text);
+
+private:
+    int m_group;
+    int m_row;
 };
 
 }  // namespace tg::app

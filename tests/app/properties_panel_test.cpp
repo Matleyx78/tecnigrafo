@@ -13,6 +13,9 @@
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/cmd/quick_select.hpp"
+#include "tg/core/entity_properties.hpp"
+#include "tg/core/hatch.hpp"
+#include "tg/core/math.hpp"
 #include "tg/edit/editor.hpp"
 
 #include <QAbstractItemView>
@@ -34,7 +37,10 @@
 #include <QVariant>
 #include <gtest/gtest.h>
 
+#include <cstddef>
 #include <string>
+#include <string_view>
+#include <tuple>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -92,6 +98,33 @@ protected:
     }
 
     EntityId addLine(double x) { return add(core::Line{{x, 0.0}, {x + 10.0, 5.0}}); }
+
+    /// Adds `entity` with the extras `extras`, as read from a file.
+    EntityId addWithExtras(const core::Entity& entity, const core::EntityExtras& extras) {
+        m_editor.beginTransaction("Test");
+        const EntityId id = m_editor.add(entity);
+        EXPECT_TRUE(m_editor.replace(id, entity, extras));
+        m_editor.commit();
+        return id;
+    }
+
+    [[nodiscard]] const core::EntityRecord& recordOf(EntityId id) {
+        const core::EntityRecord* record = m_document.find(id);
+        EXPECT_NE(record, nullptr);
+        static const core::EntityRecord kNone{};
+        return record != nullptr ? *record : kNone;
+    }
+
+    /// The value of the own property `name` of the entity `id`.
+    [[nodiscard]] core::PropertyValue ownValue(EntityId id, const std::string& name) {
+        for (const core::OwnProperty& property : core::ownProperties(m_document, recordOf(id))) {
+            if (property.name == name) {
+                return property.value;
+            }
+        }
+        ADD_FAILURE() << "no property " << name;
+        return {};
+    }
 
     /// A polyline through (x, 0), (x + 40, 0) and (x + 40, 30).
     EntityId addPolyline(double x) {
@@ -823,6 +856,247 @@ TEST_F(PropertiesWindowTest, TheCommandsAndActionsOpenWhatTheyMust) {
     events::press(input(), Qt::Key_Escape);
     EXPECT_TRUE(panel()->editingEnabled());
     EXPECT_TRUE(controls->isEnabled());
+}
+
+// --- The own properties of the types of the 0.8 (docs/tappe/0.8.1/PT25) ----
+
+/// The hatch CC of autocad-hatchedit: ANSI31 on a 60 x 40 rectangle, its
+/// pattern at the origin 245,5 kept also in the XDATA ACAD.
+core::Hatch hatchCc() {
+    core::Hatch hatch;
+    hatch.pattern = "ANSI31";
+    core::HatchLoop outer;
+    outer.flags = 7;
+    outer.polyline = core::Polyline{{{{300, 40}}, {{240, 40}}, {{240, 0}}, {{300, 0}}}, true};
+    hatch.loops = {outer};
+    hatch.seeds = {{245, 5}};
+    constexpr double kOffset = 2.245064030267288;
+    hatch.patternLines = {
+        core::PatternLine{core::degreesToRadians(45), {245, 5}, {-kOffset, kOffset}, {}}};
+    return hatch;
+}
+
+core::EntityExtras hatchCcExtras() {
+    core::EntityExtras extras;
+    extras.extended = {{1001, "ACAD"}, {1010, "245.0"}, {1020, "5.0"}, {1030, "0.0"}};
+    return extras;
+}
+
+/// An insert of B1 with the attributes UNO and DUE.
+core::Insert insertOfB1() {
+    core::Insert insert;
+    insert.block = "B1";
+    insert.insertion = {10, 10};
+    for (const auto& [id, tag, value] :
+         {std::tuple{401U, "UNO", "1"}, std::tuple{402U, "DUE", "2"}}) {
+        core::Attribute attribute;
+        attribute.id = EntityId{id};
+        attribute.tag = tag;
+        attribute.text.value = value;
+        insert.attributes.push_back(attribute);
+    }
+    return insert;
+}
+
+// Every alternative of core::Entity has its own name in the panel and in
+// QSELECT, so that a new type is not called "Text" (#913).
+TEST(EntityTypeLabels, EveryTypeHasItsOwnName) {
+    QStringList labels;
+    for (const std::string_view type : entityTypeNames()) {
+        const QString label = entityTypeLabel(type);
+        EXPECT_FALSE(label.isEmpty()) << type;
+        EXPECT_FALSE(labels.contains(label)) << type;
+        labels.append(label);
+    }
+    EXPECT_EQ(
+        labels,
+        (QStringList{QStringLiteral("Polyline"), QStringLiteral("Line"), QStringLiteral("Circle"),
+                     QStringLiteral("Arc"), QStringLiteral("Text"), QStringLiteral("Solid"),
+                     QStringLiteral("Ellipse"), QStringLiteral("MText"),
+                     QStringLiteral("Attribute Definition"), QStringLiteral("Block Reference"),
+                     QStringLiteral("Dimension"), QStringLiteral("Hatch")}));
+}
+
+TEST_F(PropertiesPanelTest, AHatchShowsItsTypeAndItsScaleChangesAndUndoes) {
+    const EntityId hatch = add(hatchCc());
+    const core::Entity before = recordOf(hatch).entity;
+    const EntityId line = addLine(0.0);
+    select({hatch, line});
+    EXPECT_EQ(panel().typeLabels(),
+              (QStringList{QStringLiteral("All (2)"), QStringLiteral("Line (1)"),
+                           QStringLiteral("Hatch (1)")}));
+    ASSERT_TRUE(panel().setTypeFilter("HATCH"));
+    EXPECT_EQ(panel().targets(), std::vector<EntityId>{hatch});
+    EXPECT_EQ(panel().grid().groupIndex(PropertyGridModel::kGeometryGroup).data().toString(),
+              QStringLiteral("Pattern"));
+    const int scaleRow =
+        panel().grid().rowNamed(PropertyGridModel::kGeometryGroup, QStringLiteral("Scale"));
+    ASSERT_GE(scaleRow, 0);
+    // The area is shown and cannot be changed.
+    const int areaRow =
+        panel().grid().rowNamed(PropertyGridModel::kGeometryGroup, QStringLiteral("Area"));
+    ASSERT_GE(areaRow, 0);
+    EXPECT_FALSE(panel().grid().flags(
+                     panel().grid().rowValueIndex(PropertyGridModel::kGeometryGroup, areaRow)) &
+                 Qt::ItemIsEditable);
+
+    // Typed in the cell, as Enter commits it.
+    QTreeView* view = grid();
+    ASSERT_NE(view, nullptr);
+    const QModelIndex scale =
+        panel().grid().rowValueIndex(PropertyGridModel::kGeometryGroup, scaleRow);
+    view->setCurrentIndex(scale);
+    if (view->indexWidget(scale) == nullptr) {
+        QAbstractItemView* base = view;
+        base->edit(scale);
+    }
+    auto* typed = qobject_cast<QLineEdit*>(view->indexWidget(scale));
+    ASSERT_NE(typed, nullptr);
+    EXPECT_EQ(typed->text(), QStringLiteral("1.0000"));
+    typed->setText(QStringLiteral("2"));
+    typed->setModified(true);
+    commit(typed);
+    EXPECT_EQ(std::get<core::Hatch>(recordOf(hatch).entity).scale, 2.0);
+    EXPECT_EQ(panel()
+                  .grid()
+                  .rows(PropertyGridModel::kGeometryGroup)
+                  .at(static_cast<std::size_t>(scaleRow))
+                  .value,
+              QStringLiteral("2.0000"));
+
+    undoProperties();
+    EXPECT_EQ(recordOf(hatch).entity, before);
+}
+
+TEST_F(PropertiesPanelTest, ARefusedValueIsWrittenAndTheValueStays) {
+    const EntityId hatch = add(hatchCc());
+    const core::Entity before = recordOf(hatch).entity;
+    select({hatch});
+    const QSignalSpy messages(&panel(), &PropertiesPanel::messageShown);
+    EXPECT_FALSE(panel().setOwnProperty("scale", 0.0));
+    ASSERT_EQ(messages.size(), 1);
+    EXPECT_EQ(messages.at(0).at(0).toString(), QStringLiteral("Invalid value."));
+    EXPECT_EQ(panel().lastMessage(), QStringLiteral("Invalid value."));
+    EXPECT_EQ(recordOf(hatch).entity, before);
+    EXPECT_FALSE(editor().canUndo() && editor().undoName() == "Properties");
+
+    // Text where a number is needed, from the grid.
+    const int scaleRow =
+        panel().grid().rowNamed(PropertyGridModel::kGeometryGroup, QStringLiteral("Scale"));
+    EXPECT_FALSE(
+        panel().enterOwnValue(PropertyGridModel::kGeometryGroup, scaleRow, QStringLiteral("big")));
+    EXPECT_EQ(messages.size(), 2);
+    EXPECT_EQ(recordOf(hatch).entity, before);
+}
+
+TEST_F(PropertiesPanelTest, TheOriginOfAHatchMovesFamiliesAndXdataAndUndoesThemTogether) {
+    const EntityId hatch = addWithExtras(hatchCc(), hatchCcExtras());
+    const core::EntityRecord before = recordOf(hatch);
+    select({hatch});
+    const int originX =
+        panel().grid().rowNamed(PropertyGridModel::kGeometryGroup, QStringLiteral("Origin X"));
+    ASSERT_GE(originX, 0);
+    EXPECT_EQ(panel()
+                  .grid()
+                  .rows(PropertyGridModel::kGeometryGroup)
+                  .at(static_cast<std::size_t>(originX))
+                  .value,
+              QStringLiteral("245.0000"));
+    ASSERT_TRUE(
+        panel().enterOwnValue(PropertyGridModel::kGeometryGroup, originX, QStringLiteral("0")));
+    EXPECT_EQ(ownValue(hatch, "origin"), (core::PropertyValue{core::Vec2{0, 5}}));
+    EXPECT_EQ(std::get<core::Hatch>(recordOf(hatch).entity).patternLines.at(0).origin,
+              (core::Vec2{0, 5}));
+    EXPECT_EQ(core::patternOrigin(recordOf(hatch).extras), (core::Vec2{0, 5}));
+
+    undoProperties();
+    EXPECT_EQ(recordOf(hatch).entity, before.entity);
+    EXPECT_EQ(recordOf(hatch).extras, before.extras);
+}
+
+TEST_F(PropertiesPanelTest, AnAttributeOfAnInsertChangesAndUndoes) {
+    core::BlockDefinition definition{"B1"};
+    definition.entities.push_back({EntityId{0}, core::Line{{0, 0}, {10, 0}}});
+    document().replaceBlock("B1", definition);
+    const EntityId insert = add(insertOfB1());
+    const core::Entity before = recordOf(insert).entity;
+    select({insert});
+    EXPECT_EQ(panel().typeLabels(), QStringList{QStringLiteral("Block Reference (1)")});
+    const std::vector<OwnPropertyRow>& attributes =
+        panel().grid().rows(PropertyGridModel::kAttributesGroup);
+    ASSERT_EQ(attributes.size(), 2U);
+    EXPECT_EQ(attributes.at(0).name, QStringLiteral("UNO"));
+    EXPECT_EQ(attributes.at(1).value, QStringLiteral("2"));
+    EXPECT_FALSE(grid()->isRowHidden(PropertyGridModel::kAttributesGroup, {}));
+
+    ASSERT_TRUE(panel().enterOwnValue(PropertyGridModel::kAttributesGroup, 1,
+                                      QStringLiteral("nuovo \"due\"")));
+    const auto& changed = std::get<core::Insert>(recordOf(insert).entity);
+    EXPECT_EQ(changed.attributes.at(1).text.value, "nuovo \"due\"");
+    EXPECT_EQ(changed.attributes.at(0).text.value, "1");
+    EXPECT_EQ(panel().grid().rows(PropertyGridModel::kAttributesGroup).at(1).value,
+              QStringLiteral("nuovo \"due\""));
+
+    undoProperties();
+    EXPECT_EQ(recordOf(insert).entity, before);
+
+    // Another entity has no attributes.
+    select({addLine(0.0)});
+    EXPECT_TRUE(grid()->isRowHidden(PropertyGridModel::kAttributesGroup, {}));
+}
+
+TEST_F(PropertiesPanelTest, TheScaleZOfAnInsertChangesOnlyTheExtrasAndUndoes) {
+    core::BlockDefinition definition{"B1"};
+    definition.entities.push_back({EntityId{0}, core::Line{{0, 0}, {10, 0}}});
+    document().replaceBlock("B1", definition);
+    core::EntityExtras extras;
+    extras.specific = {{100, "AcDbBlockReference"}, {43, "3"}};
+    const EntityId insert = addWithExtras(insertOfB1(), extras);
+    const core::Entity before = recordOf(insert).entity;
+    select({insert});
+    const int scaleZ =
+        panel().grid().rowNamed(PropertyGridModel::kGeometryGroup, QStringLiteral("Scale Z"));
+    ASSERT_GE(scaleZ, 0);
+    ASSERT_TRUE(
+        panel().enterOwnValue(PropertyGridModel::kGeometryGroup, scaleZ, QStringLiteral("2")));
+    EXPECT_EQ(ownValue(insert, "scale-z"), (core::PropertyValue{2.0}));
+    EXPECT_EQ(recordOf(insert).entity, before);
+
+    undoProperties();
+    EXPECT_EQ(ownValue(insert, "scale-z"), (core::PropertyValue{3.0}));
+    EXPECT_EQ(recordOf(insert).extras, extras);
+}
+
+TEST_F(PropertiesPanelTest, ASolidBrowsesAndMovesItsCurrentVertex) {
+    core::Solid solid;
+    solid.vertices = {core::Vec2{0, 0}, core::Vec2{10, 0}, core::Vec2{0, 10}, core::Vec2{10, 10}};
+    const EntityId id = add(solid);
+    const core::Entity before = recordOf(id).entity;
+    select({id});
+    EXPECT_EQ(panel().typeLabels(), QStringList{QStringLiteral("Solid (1)")});
+    PropertyGridModel& model = panel().grid();
+    EXPECT_EQ(model.vertexCount(), 4);
+    const QList<QPair<QString, QString>> first{
+        {QStringLiteral("Current Vertex"), QStringLiteral("1")},
+        {QStringLiteral("Vertex X"), QStringLiteral("0.0000")},
+        {QStringLiteral("Vertex Y"), QStringLiteral("0.0000")}};
+    EXPECT_EQ(panel().geometry(), first);
+    const QModelIndex current = model.rowValueIndex(PropertyGridModel::kGeometryGroup, 0);
+    EXPECT_FALSE(current.data(PropertyGridModel::kPreviousVertexRole).toBool());
+    EXPECT_TRUE(current.data(PropertyGridModel::kNextVertexRole).toBool());
+
+    ASSERT_TRUE(model.nextVertex());
+    const int vertexX =
+        model.rowNamed(PropertyGridModel::kGeometryGroup, QStringLiteral("Vertex X"));
+    ASSERT_TRUE(
+        panel().enterOwnValue(PropertyGridModel::kGeometryGroup, vertexX, QStringLiteral("20")));
+    EXPECT_EQ(std::get<core::Solid>(recordOf(id).entity).vertices.at(1), (core::Vec2{20, 0}));
+    // The vertex shown stays the second.
+    EXPECT_EQ(model.currentVertex(), 1);
+    EXPECT_EQ(panel().geometry().at(1).second, QStringLiteral("20.0000"));
+
+    undoProperties();
+    EXPECT_EQ(recordOf(id).entity, before);
 }
 
 }  // namespace

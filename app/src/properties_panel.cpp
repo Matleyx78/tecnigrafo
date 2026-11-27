@@ -5,6 +5,7 @@
 
 #include "property_widgets.hpp"
 #include "quick_select_dialog.hpp"
+#include "tg/core/math.hpp"
 #include "theme.hpp"
 
 #include <QAction>
@@ -34,7 +35,10 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <optional>
+#include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <variant>
 
@@ -70,28 +74,58 @@ const char* const kLineweightIcon = "property-lineweight";
 // The funnel of QSELECT: the filter by type has no icon of its own yet.
 const char* const kFilterIcon = "quick-select";
 
-// The DXF types of core::Entity, in the order of its alternatives.
-constexpr std::array<std::string_view, std::variant_size_v<core::Entity>> kDxfTypes{
-    "LWPOLYLINE", "LINE", "CIRCLE", "ARC", "TEXT"};
+using TypeNames = std::array<std::string_view, std::variant_size_v<core::Entity>>;
 
-std::string_view dxfType(const core::Entity& entity) {
-    return kDxfTypes.at(entity.index());
+template <std::size_t... Index>
+TypeNames typeNamesOf(std::index_sequence<Index...> /*indices*/) {
+    return {core::entityTypeName(core::Entity{std::in_place_index<Index>})...};
 }
 
-QString typeName(std::string_view type) {
-    if (type == "LWPOLYLINE") {
-        return PropertiesPanel::tr("Polyline");
+std::string_view dxfType(const core::Entity& entity) {
+    return core::entityTypeName(entity);
+}
+
+/// `text` between double quotes, as core reads the tag and the value of an
+/// attribute (core::withOwnProperty, PT24; docs/verifica/rapporto.md): '"'
+/// and '\' after a '\', a control character as \u{XX}.
+std::string reportQuoted(std::string_view text) {
+    constexpr std::string_view kHexDigits = "0123456789ABCDEF";
+    constexpr unsigned char kFirstPrintable = 0x20;
+    constexpr unsigned char kDelete = 0x7F;
+    constexpr unsigned kNibble = 4U;
+    constexpr unsigned kLowNibble = 0x0FU;
+    std::string out = "\"";
+    for (const char c : text) {
+        const auto byte = static_cast<unsigned char>(c);
+        if (c == '"' || c == '\\') {
+            out += '\\';
+            out += c;
+        } else if (byte < kFirstPrintable || byte == kDelete) {
+            out += "\\u{";
+            out += kHexDigits[byte >> kNibble];
+            out += kHexDigits[byte & kLowNibble];
+            out += '}';
+        } else {
+            out += c;
+        }
     }
-    if (type == "LINE") {
-        return PropertiesPanel::tr("Line");
+    out += '"';
+    return out;
+}
+
+/// The number of `text`, independent of the locale, or nullopt.
+std::optional<double> numberOf(const QString& text) {
+    QString trimmed = text.trimmed();
+    // An angle may keep the degree sign it is shown without.
+    if (trimmed.endsWith(QChar(u'\u00B0'))) {
+        trimmed.chop(1);
     }
-    if (type == "CIRCLE") {
-        return PropertiesPanel::tr("Circle");
+    bool ok = false;
+    const double value = trimmed.toDouble(&ok);
+    if (!ok) {
+        return std::nullopt;
     }
-    if (type == "ARC") {
-        return PropertiesPanel::tr("Arc");
-    }
-    return PropertiesPanel::tr("Text");
+    return value;
 }
 
 /// The value of `field` that every entity of `ids` has, or std::nullopt if
@@ -219,6 +253,41 @@ private:
 
 }  // namespace
 
+const TypeNames& entityTypeNames() {
+    static const TypeNames kNames =
+        typeNamesOf(std::make_index_sequence<std::tuple_size_v<TypeNames>>{});
+    return kNames;
+}
+
+QString entityTypeLabel(std::string_view type) {
+    struct Label {
+        std::string_view type;
+        const char* label;
+    };
+
+    // As AutoCAD names them in its panel and in QSELECT.
+    static constexpr std::array kLabels{
+        Label{"LWPOLYLINE", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Polyline")},
+        Label{"LINE", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Line")},
+        Label{"CIRCLE", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Circle")},
+        Label{"ARC", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Arc")},
+        Label{"TEXT", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Text")},
+        Label{"SOLID", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Solid")},
+        Label{"ELLIPSE", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Ellipse")},
+        Label{"MTEXT", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "MText")},
+        Label{"ATTDEF", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Attribute Definition")},
+        Label{"INSERT", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Block Reference")},
+        Label{"DIMENSION", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Dimension")},
+        Label{"HATCH", QT_TRANSLATE_NOOP("tg::app::PropertiesPanel", "Hatch")},
+    };
+    for (const Label& label : kLabels) {
+        if (label.type == type) {
+            return PropertiesPanel::tr(label.label);
+        }
+    }
+    return {};
+}
+
 QStringList propertiesPanelIconNames() {
     return {QString::fromLatin1(kColorIcon), QString::fromLatin1(kLinetypeIcon),
             QString::fromLatin1(kLineweightIcon)};
@@ -297,6 +366,8 @@ PropertiesPanel::PropertiesPanel(QWidget* parent)
             [this](core::LinetypeId value) { setLinetype(value); });
     connect(m_delegate, &PropertyGridDelegate::lineweightChosen, this,
             [this](int value) { setLineweight(value); });
+    connect(m_delegate, &PropertyGridDelegate::ownValueChosen, this,
+            &PropertiesPanel::enterOwnValue);
     connect(m_grid, &QTreeView::clicked, this, &PropertiesPanel::toggleGroup);
     new ColumnDivider(m_grid, [this](int width) { m_nameWidth = width; });
     connectModel();
@@ -316,6 +387,7 @@ void PropertiesPanel::connectModel() {
     }
     connect(m_model, &PropertyGridModel::linetypeScaleEntered, this,
             &PropertiesPanel::enterLinetypeScale);
+    connect(m_model, &PropertyGridModel::ownValueEntered, this, &PropertiesPanel::enterOwnValue);
     connect(m_delegate, &PropertyGridDelegate::previousVertexRequested, m_model,
             &PropertyGridModel::previousVertex);
     connect(m_delegate, &PropertyGridDelegate::nextVertexRequested, m_model,
@@ -436,6 +508,7 @@ void PropertiesPanel::refresh() {
     m_model->setShown(m_shown);
     showEditors();
     showGeometry();
+    showOwnEditors();
     updateEnabled();
     Q_EMIT refreshed();
 }
@@ -489,7 +562,8 @@ std::vector<core::EntityId> PropertiesPanel::targets() const {
 
 void PropertiesPanel::showTypes() {
     // How many selected entities each type has, in the order of core::Entity.
-    std::array<std::size_t, kDxfTypes.size()> counts{};
+    const TypeNames& types = entityTypeNames();
+    std::array<std::size_t, std::tuple_size_v<TypeNames>> counts{};
     for (const core::EntityId id : m_selection) {
         if (const core::EntityRecord* record = document().find(id)) {
             ++counts.at(record->entity.index());
@@ -500,7 +574,7 @@ void PropertiesPanel::showTypes() {
     for (std::size_t index = 0; index < counts.size(); ++index) {
         if (counts.at(index) > 0) {
             ++kinds;
-            filterFound = filterFound || kDxfTypes.at(index) == m_typeFilter;
+            filterFound = filterFound || types.at(index) == m_typeFilter;
         }
     }
     if (kinds < 2 || !filterFound) {
@@ -522,8 +596,8 @@ void PropertiesPanel::showTypes() {
         if (counts.at(index) == 0) {
             continue;
         }
-        const std::string_view type = kDxfTypes.at(index);
-        const QString name = typeName(type);
+        const std::string_view type = types.at(index);
+        const QString name = entityTypeLabel(type);
         // Always with the number of the objects, as in the reference
         // (docs/adr/0039, area 8): "Polyline (1)".
         m_types->addItem(label(name, counts.at(index)),
@@ -590,12 +664,30 @@ void PropertiesPanel::showEditors() {
 void PropertiesPanel::showGeometry() {
     const std::vector<core::EntityId> ids = targets();
     m_model->setEntity(ids.size() == 1 ? document().find(ids.front()) : nullptr);
-    const bool hidden = m_model->geometry().isEmpty();
-    // Hiding a row lays the grid out again: only when it changes.
-    if (m_grid->isRowHidden(PropertyGridModel::kGeometryGroup, {}) != hidden) {
-        m_grid->setRowHidden(PropertyGridModel::kGeometryGroup, {}, hidden);
+    for (const int group :
+         {PropertyGridModel::kGeometryGroup, PropertyGridModel::kAttributesGroup}) {
+        const bool hidden = m_model->rows(group).empty();
+        // Hiding a row lays the grid out again: only when it changes.
+        if (m_grid->isRowHidden(group, {}) != hidden) {
+            m_grid->setRowHidden(group, {}, hidden);
+        }
     }
     showGroups();
+}
+
+void PropertiesPanel::showOwnEditors() {
+    // As showEditors(): an open editor shows a value refused or changed
+    // elsewhere again.
+    for (const int group :
+         {PropertyGridModel::kGeometryGroup, PropertyGridModel::kAttributesGroup}) {
+        const int count = static_cast<int>(m_model->rows(group).size());
+        for (int row = 0; row < count; ++row) {
+            const QModelIndex index = m_model->rowValueIndex(group, row);
+            if (QWidget* editor = m_grid->indexWidget(index)) {
+                m_delegate->setEditorData(editor, index);
+            }
+        }
+    }
 }
 
 void PropertiesPanel::showGroups() {
@@ -727,6 +819,110 @@ bool PropertiesPanel::setLineweight(int lineweight) {
     }
     return change(
         [lineweight](core::EntityProperties& properties) { properties.lineweight = lineweight; });
+}
+
+bool PropertiesPanel::setOwnProperty(std::string_view name, const core::PropertyValue& value) {
+    if (!canEdit()) {
+        return false;
+    }
+    const std::vector<core::EntityId> ids = targets();
+    if (ids.size() != 1) {
+        return false;
+    }
+    const core::EntityId id = ids.front();
+    const core::EntityRecord* record = document().find(id);
+    if (record == nullptr) {
+        return false;
+    }
+    core::PropertyChange change = core::withOwnProperty(document(), *record, name, value);
+    if (!change.entity) {
+        return refuse(QString::fromStdString(change.refusal));
+    }
+    editor().beginTransaction(kTransactionName);
+    // With the extras, entity and extras are one change of the transaction
+    // (#927, [bloccante] 6).
+    const bool done =
+        change.extras ? editor().replace(id, std::move(*change.entity), std::move(*change.extras))
+                      : editor().replace(id, std::move(*change.entity));
+    if (done) {
+        editor().commit();
+        setMessage({});
+    } else {
+        editor().rollback();
+    }
+    refresh();
+    if (done) {
+        Q_EMIT changed();
+    }
+    return done;
+}
+
+bool PropertiesPanel::setAttributeValue(const std::string& tag, const std::string& value) {
+    return setOwnProperty("attribute", reportQuoted(tag) + ":" + reportQuoted(value));
+}
+
+bool PropertiesPanel::enterOwnValue(int group, int row, const QString& text) {
+    const OwnPropertyRow* shown = m_model->row(group, row);
+    if (shown == nullptr || !shown->editable()) {
+        return false;
+    }
+    // A copy: the change shows the rows again.
+    const OwnPropertyRow entered = *shown;
+    if (!entered.tag.empty()) {
+        return setAttributeValue(entered.tag, text.toStdString());
+    }
+    const auto invalid = [this] {
+        return refuse(
+            QString::fromUtf8(core::kInvalidPropertyValue.data(),
+                              static_cast<qsizetype>(core::kInvalidPropertyValue.size())));
+    };
+    switch (entered.kind) {
+        case core::PropertyKind::Number:
+        case core::PropertyKind::Distance: {
+            const std::optional<double> number = numberOf(text);
+            return number ? setOwnProperty(entered.property, *number) : invalid();
+        }
+        case core::PropertyKind::Angle: {
+            const std::optional<double> degrees = numberOf(text);
+            return degrees
+                       ? setOwnProperty(entered.property, core::reducedDegreesToRadians(*degrees))
+                       : invalid();
+        }
+        case core::PropertyKind::Point: {
+            const std::optional<double> number = numberOf(text);
+            const std::vector<core::EntityId> ids = targets();
+            const core::EntityRecord* record =
+                ids.size() == 1 ? document().find(ids.front()) : nullptr;
+            if (!number || record == nullptr) {
+                return invalid();
+            }
+            const std::vector<core::OwnProperty> properties =
+                core::ownProperties(document(), *record);
+            const auto found =
+                std::ranges::find(properties, entered.property, &core::OwnProperty::name);
+            const auto* point =
+                found != properties.end() ? std::get_if<core::Vec2>(&found->value) : nullptr;
+            if (point == nullptr) {
+                return invalid();
+            }
+            core::Vec2 changedPoint = *point;
+            if (entered.component == 0) {
+                changedPoint.x = *number;
+            } else {
+                changedPoint.y = *number;
+            }
+            return setOwnProperty(entered.property, changedPoint);
+        }
+        case core::PropertyKind::Text:
+        case core::PropertyKind::Choice:
+            return setOwnProperty(entered.property, text.toStdString());
+        case core::PropertyKind::Flag:
+            if (!entered.choices.contains(text)) {
+                return invalid();
+            }
+            return setOwnProperty(entered.property, text == entered.choices.front());
+    }
+    return false;
 }
 
 void PropertiesPanel::showQuickSelect(std::vector<core::EntityId> current) {
