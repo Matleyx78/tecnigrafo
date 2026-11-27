@@ -769,7 +769,8 @@ TEST_F(DrawingAidsTest, SnapMagnetMovesOnlyTheDrawnCursorToTheSnap) {
     moveScreen(nearVertex);
     ASSERT_TRUE(runner().activeSnap());
     EXPECT_NE(view()->cursor().shape(), Qt::BlankCursor);
-    const QPoint arm = screen(kVertex).toPoint() + QPoint{0, 20};
+    // The dynamic input box can cover the lower arm; sample the left arm instead.
+    const QPoint arm = screen(kVertex).toPoint() + QPoint{-20, 0};
     const QColor cursor = window().theme() == Theme::Dark ? Qt::white : Qt::black;
     EXPECT_NE(view()->grab().toImage().pixelColor(arm), cursor);
 
