@@ -340,8 +340,10 @@ PropertiesPanel::PropertiesPanel(QWidget* parent)
         if (ids.size() != 1) {
             return;
         }
-        if (auto* view = parentWidget()->findChild<CadView*>()) {
-            view->editMText(ids.front());
+        if (QWidget* owner = parentWidget()) {
+            if (auto* view = owner->findChild<CadView*>()) {
+                view->editMText(ids.front());
+            }
         }
     });
 
@@ -394,8 +396,10 @@ PropertiesPanel::PropertiesPanel(QWidget* parent)
         }
         const int vertex = m_model->currentVertex();
         emit currentVertexChanged(ids.front(), vertex);
-        if (auto* view = parentWidget()->findChild<CadView*>()) {
-            view->setCurrentVertex(ids.front(), vertex);
+        if (QWidget* owner = parentWidget()) {
+            if (auto* view = owner->findChild<CadView*>()) {
+                view->setCurrentVertex(ids.front(), vertex);
+            }
         }
     };
     connect(m_delegate, &PropertyGridDelegate::previousVertexRequested, this,
