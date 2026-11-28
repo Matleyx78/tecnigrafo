@@ -405,6 +405,8 @@ anche scrivendo:
 | `W` (*Window*), poi due punti | una **finestra**, in qualunque direzione indichi i due angoli |
 | `C` (*Crossing*), poi due punti | un'**intersezione**, in qualunque direzione |
 | `ALL` | tutte le entità sui layer accesi e non congelati; quelle sui layer bloccati sono scartate e contate |
+| `L` (*Last*) | l'ultima entità visibile creata |
+| `P` (*Previous*) | il gruppo dell'ultima richiesta di oggetti conclusa con una selezione |
 
 Dopo `W` o `C` compaiono `Specify first corner:` e `Specify opposite corner:`:
 rispondi con le coordinate o con due clic. Il primo angolo non sceglie l'entità
@@ -414,9 +416,8 @@ angolo c'è già; prima, annulla il comando.
 
 I messaggi sono quelli dei gesti con il mouse (`2 found, 2 total`, layer
 bloccati). Le parole chiave della domanda hanno la precedenza: nella domanda dei
-bordi di `TRIM`, `O` sceglie *mOde*. Le altre opzioni di AutoCAD (*Last*,
-*Previous*, *Fence*, *WPolygon* e simili) non ci sono: un testo diverso produce
-`Invalid selection.`.
+bordi di `TRIM`, `O` sceglie *mOde*. Le altre opzioni di AutoCAD (*Fence*,
+*WPolygon* e simili) non ci sono: un testo diverso produce `Invalid selection.`.
 
 **Esempio:** scrivi `e`, poi `c` e i due angoli `5,5` e `25,25`: vengono scelte
 le entità toccate dal rettangolo, qui due linee, e `Invio` le cancella.
@@ -453,6 +454,12 @@ gesto di selezione (clic sul bordo, finestra o intersezione), sia a riposo sia d
 `Select objects:`. Quando un comando chiede `Select objects:`, se il gesto ha incontrato
 oggetti su layer bloccati, il programma li scarta e scrive subito dopo il conteggio:
 `1 was on a locked layer.` oppure `<n> were on a locked layer.`
+
+## SELECT — preparare una selezione
+
+`SELECT` apre una richiesta `Select objects:` senza modificare il disegno. Il
+gruppo confermato diventa la selezione *Previous*, che puoi richiamare con `P`
+alla successiva richiesta di oggetti.
 
 ## ERASE — cancellare entità
 
@@ -514,6 +521,9 @@ si applica lo snap.
 | *Perpendicular* | piede della perpendicolare dal punto base del comando | simbolo ⊥ |
 | *Tangent* | punto di tangenza dal punto base del comando a un cerchio, a un arco o a un arco di polilinea | cerchio con linea tangente in alto |
 | *Quadrant* | punti cardinali a 0°, 90°, 180°, 270° di cerchi e archi | rombo |
+| *Nearest* | punto della geometria più vicino al puntatore | simbolo a clessidra |
+| *Extension* | prosecuzione di una linea, un arco o una polilinea oltre un estremo acquisito | linea tratteggiata |
+| *Parallel* | direzione parallela a una linea o a un segmento di polilinea acquisito | due linee parallele |
 
 ### Attivare e scegliere i modi
 
@@ -524,10 +534,11 @@ si applica lo snap.
   i singoli modi, anche quando OSNAP è spento. Spegnere `F3` conserva i modi scelti.
   Se tutti i modi sono disattivati, non c'è alcun aggancio anche con OSNAP acceso.
 - All'avvio lo snap è acceso con i modi *Endpoint*, *Midpoint*, *Center*, *Insertion* e
-  *Intersection*; *Perpendicular*, *Tangent* e *Quadrant* sono disattivati per difetto.
+  *Intersection*; *Perpendicular*, *Tangent*, *Quadrant*, *Nearest*, *Extension* e
+  *Parallel* sono disattivati per difetto.
   Le impostazioni non si conservano alla chiusura del programma.
 - Le regole di intersezione, perpendicolare, tangente e quadrante, e la loro
-  priorità, sono nel [manuale dell'interfaccia](interfaccia.md#snap-a-intersezione-tangente-perpendicolare-e-quadrante).
+  priorità, sono nel [manuale dell'interfaccia](interfaccia.md#snap-a-oggetto).
 
 Per estremi e punti medi l'apertura è di **10 pixel**: avvicina il puntatore al
 punto voluto finché compare il marcatore. La dimensione del marcatore e l'apertura
@@ -1987,7 +1998,9 @@ transazione `CHPROP`: premendo `Esc` si esce dal comando conservando i cambi gi�
 
 `MTEXT` crea un testo multiriga dentro un rettangolo. Indica il primo angolo e quello opposto; prima del secondo puoi scegliere *Height*, *Justify* (le nove combinazioni `TL`…`BR`), *Line spacing* (`At least` o `Exactly`, poi fattore o distanza), *Rotation*, *Style* e *Width*. Alla richiesta `MText:` ogni riga scritta aggiunge una riga; una riga vuota conclude.
 
-I codici di formato incorporati di AutoCAD non vengono interpretati: sono mostrati come testo semplice. Colonne e varianti non rappresentate restano dati non gestiti e vengono conservate nel file.
+I codici di formato incorporati sono interpretati dall'editor e nella vista.
+Colonne e varianti non rappresentate restano dati non gestiti e vengono
+conservate nel file.
 
 ## Blocchi: `-BLOCK` e `-INSERT`
 
@@ -1995,7 +2008,7 @@ I codici di formato incorporati di AutoCAD non vengono interpretati: sono mostra
 
 `-INSERT` (alias `INSERT`) accetta un nome, un percorso DXF oppure `nome=percorso`. `?` elenca i blocchi. Un file diventa un blocco col nome del file e punto base ricavato da `$INSBASE`; `nome=percorso` assegna il nome e ridefinisce senza altre domande. Se il nome esiste, la sua definizione ha la precedenza su un percorso ambiguo.
 
-Dopo il nome indica il punto di inserimento. Le opzioni *Basepoint*, *Scale* e *Rotate* permettono di fissare prima i rispettivi valori. La scala accetta un fattore uniforme, un angolo opposto (*Corner*) o le tre componenti *XYZ*; la scala Z viene conservata ma il disegno resta 2D. Scala zero, riferimenti mancanti e cicli sono rifiutati. Gli `ATTDEF` variabili prendono il valore predefinito, senza domande.
+Dopo il nome indica il punto di inserimento. Le opzioni *Basepoint*, *Scale* e *Rotate* permettono di fissare prima i rispettivi valori. La scala accetta un fattore uniforme, un angolo opposto (*Corner*) o le tre componenti *XYZ*; la scala Z viene conservata ma il disegno resta 2D. Scala zero, riferimenti mancanti e cicli sono rifiutati. Con `ATTREQ` a 1 (il valore iniziale) gli `ATTDEF` variabili chiedono il valore; con `ATTREQ` a 0 prendono il valore predefinito senza domande.
 
 ## Quote e stili di quota
 
@@ -2028,7 +2041,93 @@ Tecnigrafo rigenera soltanto le combinazioni compatibili con lo stile `ISO-25`. 
 
 ## Limiti delle ellissi e dello snap
 
-Le ellissi si leggono, si scrivono, si mostrano e possono nascere da blocchi a scala non uniforme. In questa tappa `TRIM`, `EXTEND`, `OFFSET`, `FILLET` e gli altri comandi di modifica geometrica non le accettano. Lo snap *Vicino* (*Nearest*) non è disponibile; usa gli snap ai punti notevoli elencati sopra.
+Le ellissi si leggono, si scrivono, si mostrano e possono nascere da blocchi a
+scala non uniforme. In questa tappa `TRIM`, `EXTEND`, `OFFSET`, `FILLET` e gli
+altri comandi di modifica geometrica non le accettano. Lo snap *Vicino*
+(*Nearest*) è disponibile anche sulle ellissi.
+
+## ELLIPSE — ellissi e archi ellittici
+
+`ELLIPSE` (alias `EL`) crea un'ellisse indicando i due estremi dell'asse
+maggiore e la distanza dell'altro semiasse. L'opzione *Center* parte invece
+dal centro; *Rotation* determina il rapporto fra gli assi mediante un angolo.
+Con *Arc* si indicano anche gli angoli iniziale e finale e nasce un arco
+ellittico. *Isocircle* non è disponibile. Le ellissi non sono ancora accettate
+da `TRIM`, `EXTEND`, `OFFSET` e `FILLET`.
+
+## RECTANG e POLYGON — polilinee chiuse regolari
+
+`RECTANG` (alias `REC`) crea una `LWPOLYLINE` chiusa fra due angoli. Prima del
+secondo angolo si possono impostare *Chamfer*, *Fillet* e *Width*; *Dimensions*
+fissa base e altezza, *Area* calcola una dimensione da area e altra dimensione,
+e *Rotation* ruota il rettangolo. *Elevation* e *Thickness* sono conservate
+nelle proprietà della polilinea, pur restando il disegno bidimensionale.
+
+`POLYGON` (alias `POL`) chiede da 3 a 1024 lati. Con centro e raggio crea il
+poligono *Inscribed* o *Circumscribed*; *Edge* usa invece i due estremi di un
+lato. Anche il risultato di questo comando è una `LWPOLYLINE` chiusa.
+
+## Testo formattato e TEXTEDIT
+
+`MTEXT` apre nella finestra un editor ruotato e in scala con il testo: `Invio`
+crea un paragrafo, `Ctrl+Invio` o un clic fuori confermano ed `Esc` annulla. La
+barra dei formati applica grassetto, corsivo, sottolineato, sopralineato,
+barrato, altezza, colore, larghezza, obliquo e spaziatura; gestisce anche le
+frazioni impilate. I codici non visualizzati, comprese colonne, tabulazioni e
+rientri, vengono conservati. Qualunque font scelto nello stile o con `\f` è
+disegnato con Liberation Sans (Regular, Bold, Italic o BoldItalic): per questo
+le misure possono differire da AutoCAD con Arial.
+
+`TEXTEDIT` (alias `ED`, anche `DDEDIT`) modifica `TEXT`, `MTEXT`, testo delle
+quote, definizioni e valori degli attributi. *Mode* sceglie fra una sola
+annotazione e modifiche multiple; in modalità multipla *Undo* annulla l'ultima
+modifica del comando. Nella finestra, il doppio clic offre lo stesso editor;
+negli script il comando chiede il valore e conserva quello corrente con
+`Invio`. Svuotare e confermare un testo esistente lo lascia invariato; una
+quota vuota torna alla misura (`<>`).
+
+## Attributi dei blocchi
+
+`-ATTDEF` (alias `ATT`, anche `ATTDEF`) crea una definizione con etichetta,
+richiesta, valore predefinito e testo. I modi *Invisible*, *Constant*, *Verify*,
+*Preset* e *Lock position* si scelgono nel comando; `AFLAGS` conserva i modi
+per la definizione successiva. Con `ATTREQ` a 1, `-INSERT` chiede i valori non
+costanti e non preimpostati e verifica quelli marcati *Verify*; con 0 usa i
+predefiniti senza domande.
+
+`-ATTEDIT` (alias `ATE`, anche `ATTEDIT`) filtra per blocco, etichetta e valore.
+Può modificare gli attributi uno per uno (valore, posizione, altezza, angolo,
+stile, layer e colore) oppure sostituire testo globalmente; la posizione,
+l'altezza e l'angolo di un attributo bloccato non cambiano. `ATTSYNC` aggiorna
+tutti gli inserimenti di una definizione: mantiene i valori con la stessa
+etichetta, aggiunge i nuovi attributi e rimuove quelli eliminati.
+
+`BATTMAN` apre la finestra per modificare, riordinare o eliminare le definizioni
+e per sincronizzare gli inserimenti. `ATTDISP` sceglie *Normal*, *ON* o *OFF*
+per mostrare rispettivamente gli attributi visibili, tutti o nessuno.
+Attributi multiriga, estrazione dei dati ed `EATTEDIT` completo restano fuori.
+
+## Griglia, snap alla griglia e icona dell'UCS
+
+`F7` o `GRID` controllano la griglia; `F9` o `SNAP` controllano lo snap alla
+griglia. `GRID` offre *ON*, *OFF*, *Snap*, *Major*, *aDaptive* e *Aspect*;
+`SNAP` offre *ON*, *OFF* e *Aspect*. Le variabili `GRIDMODE`, `GRIDUNIT`,
+`GRIDDISPLAY`, `GRIDMAJOR`, `SNAPMODE`, `SNAPUNIT` e `SNAPBASE` sono comandi e
+appartengono al disegno. Uno snap a oggetto prevale sul nodo della griglia e
+le coordinate digitate non vengono arrotondate.
+
+`UCSICON` accende o spegne l'icona e la colloca all'origine oppure nell'angolo
+della vista con *ORigin* e *Noorigin*. `SNAPANG` e lo stile isometrico letti da
+un DXF vengono conservati, ma non hanno effetto: griglia e snap restano
+allineati agli assi. Non sono disponibili la griglia a punti e lo snap polare.
+
+## -HATCHEDIT — modificare un retino
+
+`-HATCHEDIT` (alias `HE`, anche `HATCHEDIT`) sceglie un retino e ne modifica
+motivo, scala e angolo con *Properties*, l'origine con *Origin* e la regola
+delle isole con *Style*. Contorni, associatività e ordine di disegno non sono
+modificabili. Durante `-HATCH`, i contorni e le isole individuati oppure gli
+oggetti scelti restano evidenziati fino alla conferma o all'annullamento.
 
 ## Comandi dell'applicazione
 
