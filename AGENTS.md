@@ -106,7 +106,9 @@ altri motivi per fermarsi sono nei file della tabella.
 Prima di fermarti per un dubbio (un buco, un caso che sembra sbagliato),
 controlla se una regola esistente lo decide già, come fa chi rivede
 ([revisione.md](docs/agenti/revisione.md), "Che cosa blocca una revisione"): se
-sì, applicala, scrivilo nella pull request e vai avanti.
+sì, applicala, scrivilo nella pull request e vai avanti. Se resta almeno una
+[decisione], prima di arrivare al responsabile la smista l'altro agente
+([catena.md](docs/agenti/catena.md), "Smistamento").
 
 Quando ti fermi, **non aspettare la CI** (niente `scripts/ci-attendi.sh`):
 commenta nella pull request o nella issue, togli `AA-Presa in carico` e termina

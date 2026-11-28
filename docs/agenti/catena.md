@@ -95,8 +95,17 @@ verso solid-space ([contratto.md](contratto.md)), un riferimento che il
 programma contraddice ([riferimenti.md](riferimenti.md)), una pull request da
 rivedere scritta con il tuo stesso modello ([revisione.md](revisione.md)). In
 revisione ti fermi anche per una segnalazione **[decisione]** o al giro 3 con
-delle [bloccante] ancora aperte. Allora, oltre a ciò che chiede il file del tuo
-lavoro:
+delle [bloccante] ancora aperte.
+
+**Prima lo smistamento.** Se ti fermi per almeno una segnalazione
+**[decisione]** (un revisore, o un esecutore su un buco della scheda), non
+mettere ancora `decisione`: scrivi il tuo commento con le [decisione] come
+sotto, togli `AA-Presa in carico` e passa all'altro agente con
+`scripts/passa.sh <altro> <numero> smistamento` ("Smistamento"). Vai diretto
+ai punti qui sotto solo se lo smistamento c'è già stato sullo stesso punto, o
+se ti fermi per un altro motivo (un caso di riferimento sbagliato, il
+contratto, il giro 3, il tuo stesso modello). Allora, oltre a ciò che chiede il
+file del tuo lavoro:
 
 1. aggiungi l'etichetta `decisione` alla issue e, se c'è, alla pull request;
 2. scrivi **un solo** commento (nella pull request se c'è, altrimenti nella
@@ -199,8 +208,9 @@ del giro prima. Che cosa blocca e che cosa no lo dice
 
 Alla fine, in quest'ordine:
 
-- almeno una [decisione], o [bloccante] al giro 3 (scrivi «Fermato dopo tre
-  giri»): "Fermarsi per una decisione";
+- almeno una [decisione]: lo smistamento di "Fermarsi per una decisione",
+  con `scripts/passa.sh <esecutore> <numero> smistamento`; [bloccante] al
+  giro 3 (scrivi «Fermato dopo tre giri»): "Fermarsi per una decisione";
 - [bloccante] ai giri 1 o 2: `scripts/passa.sh <esecutore> <numero>
   correzioni <N>`;
 - altrimenti (solo [facoltativa] o nessuna segnalazione): etichetta `pronta`.
@@ -211,6 +221,37 @@ Per una pull request con **Revisione della correzione: da fare** il verbale è
 quello di [revisione.md](revisione.md), "Le correzioni delle schede si
 rivedono", con le stesse classi: un buco nuovo visibile è una [decisione], e
 non lo scegli tu.
+
+## Smistamento
+
+Chi riceve uno smistamento (`scripts/passa.sh … smistamento`) è l'altro
+agente: prende in carico, legge le segnalazioni [decisione] dell'ultimo
+verbale o commento di arresto e controlla ognuna contro le regole esistenti
+(la scheda, gli ADR, [DECISIONI.md](../DECISIONI.md),
+[REGOLE-NUMERICHE.md](../REGOLE-NUMERICHE.md),
+[revisione.md](revisione.md)). Non cambia file e non fa commit. Lascia **un
+solo** commento che comincia con «Smistamento di <nome dell'agente>»:
+
+- una [decisione] che una regola esistente decide diventa **[bloccante]**, con
+  la regola citata e l'esempio risolto;
+- solo quelle che nessuna regola decide restano **[decisione]**, con la riga
+  da copiare come in "Fermarsi per una decisione", punto 2.
+
+Poi, in quest'ordine:
+
+- almeno una [decisione] rimasta: "Fermarsi per una decisione", punti 1–4,
+  con il tuo commento come quello del punto 2;
+- altrimenti, su una pull request rivista: `scripts/passa.sh <esecutore>
+  <numero> correzioni <N>`, dove N è il giro che si era fermato;
+- altrimenti, per un esecutore fermo su un buco (nella issue, senza pull
+  request): `scripts/avvia.sh <issue> "Smistamento: applica le regole del
+  commento «Smistamento di <nome>»."`, che lo fa ripartire.
+
+Togli `AA-Presa in carico` e fermati. Il giro successivo del revisore
+controlla come la regola è stata applicata, quindi la revisione resta
+dell'altro agente; se il revisore ripropone lo stesso punto, va diretto al
+responsabile, senza un secondo smistamento ([DECISIONI.md](../DECISIONI.md),
+2026-11-28).
 
 ## Analisi di una CI rossa (revisore)
 
@@ -257,7 +298,18 @@ con quelle parole (al più dopo un trattino di elenco) e porta una sola issue:
 le stesse parole dentro una frase sono una citazione e non avviano niente, e
 le righe dentro un blocco di codice (fra tre backtick o tre tilde) sono esempi
 e non contano, nemmeno per `Closes #N` (`scripts/catena.py`). L'avvio non toglie `decisione`: la toglie l'agente
-quando prende in carico. Ogni agente legge l'AGENTS.md del suo
+quando prende in carico.
+
+Poi avvia anche le **issue che il merge libera** (`scripts/liberati.py`):
+quelle aperte con un'etichetta `agente:claude` o `agente:codex` che hanno fra
+le issue delle righe "Dipende da" o "Riferimenti" una che la pull request
+chiude (`Closes #N`), e ora le hanno tutte chiuse, se non sono prese in
+carico, non hanno un commento di avvio e nessuna pull request aperta le
+nomina. Le catene aperte (pull request aperte non ancora `pronta` e issue
+prese in carico senza pull request) sono **al più 8**: quelle liberate oltre
+il limite il workflow le scrive in un commento della pull request unita, e si
+avviano a mano con `scripts/avvia.sh` ([DECISIONI.md](../DECISIONI.md),
+2026-11-28). Ogni agente legge l'AGENTS.md del suo
 ramo: una pull request nata prima di un cambio di queste regole va aggiornata
 su `main` prima di entrare nella catena.
 
@@ -270,6 +322,18 @@ sulle decisioni scritte dal responsabile e mai riprese (per esempio per la
 quota di Codex). Una pull request e le issue collegate (`Closes #N`, la riga
 `Avvia dopo il merge: #N`) sono una catena sola: i passaggi a Codex scritti
 nella issue contano per la pull request. Lascia stare le pull request con la
-CI ancora in corso e segnala `AA-Presa in carico` rimasta. Come avvio o
+CI ancora in corso e segnala `AA-Presa in carico` rimasta.
+
+Prima di mettere `ferma` su una pull request, guarda se il passo successivo è
+**uno solo e certo**: CI dell'ultimo commit verde, `AA-Presa in carico`
+tolta, nessuna `decisione`, nessun verbale, analisi o passaggio in revisione
+già scritti. Allora il passo lo fa lei, e lo scrive in un commento
+«Passaggio fatto dalla sentinella»: per un pacchetto (`[X.Y-PTN]`, `[FN]`) o
+una correzione delle schede, `scripts/passa.sh <revisore> <numero> revisione
+1`, dove il revisore è l'altro agente della issue collegata; per i
+riferimenti (`[X.Y-RTN]`), l'etichetta `pronta`. Negli altri casi, o se il
+passaggio non riesce, resta `ferma` ([DECISIONI.md](../DECISIONI.md),
+2026-11-28). È una rete di sicurezza: il passaggio finale resta compito tuo
+("Fine del lavoro"). Come avvio o
 decisione conta solo un commento dell'account del responsabile, che è anche
 quello degli agenti; i commenti di altri account non contano.

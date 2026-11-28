@@ -195,5 +195,52 @@ class Find(unittest.TestCase):
         self.assertEqual([it.number for it, _ in find(items, NOW, 60, gh)], [10])
 
 
+def pr_item(title: str = "[0.8.2-PT3] Spline", body: str = "Closes #10", **kw) -> sentinella.Item:
+    base = dict(number=20, is_pr=True, labels=set(), idle=90.0, linked=[10],
+                comments=[comment("Presa in carico da Codex")], title=title, body=body)
+    base.update(kw)
+    return sentinella.Item(**base)
+
+
+class Passaggio(unittest.TestCase):
+    def test_package_goes_to_the_other_agent(self):
+        self.assertEqual(sentinella.passaggio(pr_item(), True, "codex"), ("revisione", "claude"))
+        self.assertEqual(sentinella.passaggio(pr_item(), True, "claude"), ("revisione", "codex"))
+
+    def test_fuori_tappa_and_correction_of_the_specs(self):
+        self.assertEqual(sentinella.passaggio(pr_item(title="[F14] Grafica"), True, "claude"),
+                         ("revisione", "codex"))
+        correction = pr_item(title="docs(0.8.2): decisioni di PT3",
+                             body="Revisione della correzione: da fare\n\nAvvia dopo il merge: #10")
+        self.assertEqual(sentinella.passaggio(correction, True, "codex"), ("revisione", "claude"))
+
+    def test_references_get_pronta(self):
+        rt = pr_item(title="test(verifica): add spline cases [0.8.2-RT3]")
+        self.assertEqual(sentinella.passaggio(rt, True, "claude"), ("pronta", ""))
+
+    def test_no_step_when_not_certain(self):
+        cases = {
+            "red or unfinished CI": (pr_item(), False, "codex"),
+            "label still held": (pr_item(labels={"AA-Presa in carico"}), True, "codex"),
+            "decision": (pr_item(labels={"decisione"}), True, "codex"),
+            "report already written": (pr_item(comments=[comment("Revisione di Claude\n\nGiro di revisione: 1")]),
+                                       True, "codex"),
+            "analysis": (pr_item(comments=[comment("Analisi di Claude: la causa …")]), True, "codex"),
+            "hand-over already done": (pr_item(comments=[comment(
+                "@claude [modello: opus] Rivedi questa pull request come dice docs/agenti/catena.md "
+                "in \"Revisione (revisore)\" (giro 1).")]), True, "codex"),
+            "earlier step of the sentinel": (pr_item(comments=[comment(
+                "**Passaggio fatto dalla sentinella**: …")]), True, "codex"),
+            "closing of the stage": (pr_item(title="docs(release): prepare Tecnigrafo 0.8.2"), True, "codex"),
+            "no agent on the issue": (pr_item(), True, None),
+        }
+        for name, (it, green, executor) in cases.items():
+            with self.subTest(name):
+                self.assertIsNone(sentinella.passaggio(it, green, executor))
+
+    def test_issue_is_never_handed_over(self):
+        self.assertIsNone(sentinella.passaggio(item(), True, "codex"))
+
+
 if __name__ == "__main__":
     unittest.main()

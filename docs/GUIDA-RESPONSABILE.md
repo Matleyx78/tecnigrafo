@@ -1035,10 +1035,12 @@ issue.
 
 Ogni pull request si unisce come in A3. In più, durante una tappa:
 
-1. **Avvia ciò che il merge ha sbloccato.** In Tecnigrafo le issue delle righe
-   `Avvia dopo il merge: #N` partono da sole; le altre che il merge sblocca (i
-   pacchetti di riferimenti e di lavoro con la riga "Dipende da" ora tutta
-   chiusa) le avvii con un commento (A2a), guardando *Ready* di
+1. **Avvia ciò che il merge ha sbloccato.** In Tecnigrafo partono da sole le
+   issue delle righe `Avvia dopo il merge: #N` e quelle che il merge libera
+   (le righe "Dipende da" e "Riferimenti" ora tutte chiuse), fino a 8 catene
+   aperte ([agenti/catena.md](agenti/catena.md), "Dopo il merge"). Quelle oltre
+   il limite te le scrive *Dopo il merge* nella pull request unita: le avvii
+   con `scripts/avvia.sh <numero>` quando c'è posto, guardando *Ready* di
    `scripts/dipendenze.py <tappa>`. In solid-space, finché non ha la catena,
    riavvia l'agente che ha finito con la frase di B8, il lotto di B7 quando
    un merge ha sbloccato nuovi pacchetti di riferimenti e quello di B9 quando

@@ -9,6 +9,13 @@
 #     scripts/passa.sh <claude|codex> <pr> revisione <round>
 #     scripts/passa.sh <claude|codex> <pr> correzioni <round>
 #     scripts/passa.sh <claude|codex> <pr> analisi
+#     scripts/passa.sh <claude|codex> <pr or issue> smistamento
+#
+# "smistamento" hands the [decisione] points of the last report to the other
+# agent, who checks them against the existing rules before they reach the
+# owner (docs/agenti/catena.md, "Smistamento"). It also takes an issue
+# number, for a stop without a pull request (an executor on a gap of the
+# spec, a review of the interfaces).
 #
 # Token: GH_TOKEN_UTENTE if set (Claude in GitHub Actions, the RELAY_PAT
 # secret), otherwise GH_TOKEN (Codex, whose token already belongs to the
@@ -24,7 +31,7 @@ set -euo pipefail
 repo="${GITHUB_REPOSITORY:-Matleyx78/tecnigrafo}"
 
 usage() {
-  echo "usage: $0 <claude|codex> <pr> <revisione|correzioni|analisi> [round]" >&2
+  echo "usage: $0 <claude|codex> <pr> <revisione|correzioni|analisi|smistamento> [round]" >&2
   exit 2
 }
 
@@ -41,7 +48,7 @@ esac
 case "$kind" in
   revisione|correzioni)
     case "$round" in ''|*[!0-9]*) usage ;; esac ;;
-  analisi) ;;
+  analisi|smistamento) ;;
   *) usage ;;
 esac
 
@@ -52,6 +59,8 @@ case "$kind" in
     task="Correggi le segnalazioni [bloccante] del giro di revisione $round (e della ripresa dopo la decisione, se c'è) come dice docs/agenti/catena.md in \"Correzioni (esecutore)\", e pubblica i commit con git push sullo stesso ramo." ;;
   analisi)
     task="La CI di questa pull request non passa dopo tre tentativi: analizzala come dice docs/agenti/catena.md in \"Analisi di una CI rossa (revisore)\"." ;;
+  smistamento)
+    task="Smista le segnalazioni [decisione] che l'ultimo verbale o commento di arresto ha scritto per questa pull request, come dice docs/agenti/catena.md in \"Smistamento\": quelle che una regola esistente decide diventano [bloccante], solo le altre vanno al responsabile." ;;
 esac
 
 token="${GH_TOKEN_UTENTE:-${GH_TOKEN:-$(gh auth token 2>/dev/null || true)}}"
@@ -61,7 +70,10 @@ if [ -z "$token" ]; then
 fi
 
 target="$pr"
-if [ "$agent" = codex ] && [ "$kind" != correzioni ]; then
+if [ "$kind" = smistamento ] && ! GH_TOKEN="$token" gh api "repos/$repo/pulls/$pr" --jq .number > /dev/null 2>&1; then
+  # A stop without a pull request: the issue itself.
+  task="${task//questa pull request/questa issue}"
+elif [ "$agent" = codex ] && [ "$kind" != correzioni ]; then
   target="$(GH_TOKEN="$token" gh api "repos/$repo/pulls/$pr" --jq '.body // ""' \
     | python3 "$(dirname "$0")/catena.py" collegata)"
   if [ -z "$target" ]; then
@@ -69,7 +81,11 @@ if [ "$agent" = codex ] && [ "$kind" != correzioni ]; then
       "cannot hand it to Codex" >&2
     exit 1
   fi
-  task="Sei il revisore della pull request #$pr: lavora sulla pull request #$pr, non su questa issue. $task"
+  if [ "$kind" = smistamento ]; then
+    task="Lavora sulla pull request #$pr, non su questa issue. $task"
+  else
+    task="Sei il revisore della pull request #$pr: lavora sulla pull request #$pr, non su questa issue. $task"
+  fi
   task="${task//questa pull request/la pull request #$pr}"
 fi
 
