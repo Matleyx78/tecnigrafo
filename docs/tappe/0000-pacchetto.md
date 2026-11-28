@@ -68,10 +68,26 @@ servono più di qualche riga, il pacchetto è troppo grosso e va diviso.
 ```
 
 - **Strumenti:** si scrive con le direttive e le domande di `main` (o
-  dell'onda 0: quale pacchetto).
+  dell'onda 0: quale pacchetto). Se una domanda chiede all'oracolo ezdxf un
+  campo che `tests/verifica/oracolo/ezdxf_attesi.py` impara solo con questo
+  pacchetto, la scheda sceglie qui una strada: **A**, il campo dell'oracolo
+  entra prima del RT (nell'onda 0 o in un pacchetto in testa); **B**, il caso
+  non si dichiara `; oracle: ezdxf` finché questo pacchetto non è unito, e la
+  scheda prevede la piccola pull request di soli riferimenti che poi rimette
+  la dichiarazione. L'oracolo controlla anche i casi in attesa, quindi senza
+  una delle due il caso è rosso subito (RT23, #1028).
 - **Dipendenze:** ogni comando o entità che usa viene da `main` o dai pacchetti
   in "Dipende da".
 - **Risposte condivise:** questo pacchetto cambia una risposta di una fonte di
   verifica (oracolo ezdxf, rapporto, catalogo delle domande, archivio dei casi
   di solid-space)? Se sì, quali casi già uniti tocca e come restano verdi fino
-  all'ultimo pacchetto che ne dipende; altrimenti «nessuna».
+  all'ultimo pacchetto che ne dipende; altrimenti «nessuna». Un campo nuovo, o
+  il gruppo DXF da cui nasce, si cerca in **tutti** i casi già uniti: i DXF di
+  `dxf-test-file` e anche i `dati.dxf` scritti a mano in
+  `tests/verifica/casi/` (PT15, #951). Per ogni caso che cambia, la scheda del
+  RT dice di correggerlo, con `; cambia con #<PT>` e la riga nel suo file di
+  `in-attesa/`.
+- **Regole già scritte:** quali documenti la risposta deve rispettare oltre
+  alla fonte (`docs/verifica/rapporto.md`, il PT gemello, regole delle tappe
+  precedenti, funzioni di `core` già esistenti). Chi scrive i riferimenti li
+  controlla uno per uno ([agenti/riferimenti.md](../agenti/riferimenti.md)).
