@@ -58,9 +58,10 @@ jobs:
           git -C third_party/solid-space checkout --detach FETCH_HEAD
           git -C third_party/solid-space log -1 --format='%H %s'
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build libgtest-dev
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y ninja-build libgtest-dev
       - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
