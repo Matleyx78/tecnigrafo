@@ -5,11 +5,14 @@
 #include "command_line.hpp"
 #include "input_events.hpp"
 #include "main_window.hpp"
+#include "settings_dialog.hpp"
 #include "theme.hpp"
 
 #include <QAction>
 #include <QColor>
+#include <QComboBox>
 #include <QCoreApplication>
+#include <QDialogButtonBox>
 #include <QFileInfo>
 #include <QImage>
 #include <QLabel>
@@ -18,6 +21,7 @@
 #include <QMouseEvent>
 #include <QPlainTextEdit>
 #include <QPoint>
+#include <QSettings>
 #include <QStatusBar>
 #include <QStringList>
 #include <QTemporaryDir>
@@ -69,6 +73,11 @@ private:
 class DrawingAidsTest : public testing::Test {
 protected:
     void SetUp() override {
+        ASSERT_TRUE(m_directory.isValid());
+        QCoreApplication::setOrganizationName(QStringLiteral("TecnigrafoPT33Test"));
+        QCoreApplication::setApplicationName(QStringLiteral("DrawingAids"));
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, m_directory.path());
         m_window.show();
         m_window.activateWindow();
         ASSERT_TRUE(QTest::qWaitForWindowActive(&m_window));
@@ -93,7 +102,6 @@ protected:
         for (const char* name : kNames) {
             ASSERT_NE(action(name), nullptr) << name;
         }
-        ASSERT_TRUE(m_directory.isValid());
         m_window.setFileDialog([this](cmd::FilePrompt /*kind*/, const QString& /*path*/) {
             return m_fileAnswers.isEmpty() ? QString{} : m_fileAnswers.takeFirst();
         });
@@ -104,6 +112,12 @@ protected:
         ASSERT_NE(button("polarButton"), nullptr);
         ASSERT_NE(button("otrackButton"), nullptr);
         ASSERT_NE(input(), nullptr);
+    }
+
+    void TearDown() override {
+        QSettings::setDefaultFormat(m_format);
+        QCoreApplication::setOrganizationName(m_organization);
+        QCoreApplication::setApplicationName(m_application);
     }
 
     [[nodiscard]] CadView* view() const { return m_window.view(); }
@@ -119,6 +133,10 @@ protected:
     void setPolar(bool on) { m_window.setPolar(on); }
 
     [[nodiscard]] const cmd::CommandRunner& runner() const { return m_window.runner(); }
+
+    [[nodiscard]] cmd::CommandRunner& mutableRunner() { return m_window.activeSession()->runner(); }
+
+    [[nodiscard]] edit::Editor& editor() { return m_window.activeSession()->editor(); }
 
     [[nodiscard]] QAction* action(const char* name) const {
         return m_window.findChild<QAction*>(QString::fromLatin1(name));
@@ -240,9 +258,39 @@ protected:
         return count;
     }
 
+    [[nodiscard]] std::size_t orangePixelsIn(const QRect& area) const {
+        const QImage image = view()->grab().toImage();
+        std::size_t count = 0;
+        for (int y = area.top(); y <= area.bottom(); ++y) {
+            for (int x = area.left(); x <= area.right(); ++x) {
+                const QColor color = image.pixelColor(x, y);
+                if (color.red() > color.green() + 20 && color.green() > color.blue() + 20) {
+                    ++count;
+                }
+            }
+        }
+        return count;
+    }
+
+    void setSnapMagnet(bool on) {
+        QTimer::singleShot(0, &m_window, [this, on] {
+            auto* dialog = m_window.findChild<SettingsDialog*>();
+            ASSERT_NE(dialog, nullptr);
+            auto* magnet = dialog->findChild<QComboBox*>(QStringLiteral("snapMagnetCombo"));
+            ASSERT_NE(magnet, nullptr);
+            magnet->setCurrentIndex(on ? 0 : 1);
+            dialog->findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Ok)->click();
+        });
+        action("tools.settings")->trigger();
+        ASSERT_EQ(m_window.snapMagnet(), on);
+    }
+
 private:
     QTemporaryDir m_directory;
     QStringList m_fileAnswers;
+    QString m_organization{QCoreApplication::organizationName()};
+    QString m_application{QCoreApplication::applicationName()};
+    QSettings::Format m_format{QSettings::defaultFormat()};
     MainWindow m_window;
 };
 
@@ -580,6 +628,163 @@ TEST_F(DrawingAidsTest, SelectedAndHotGripsArePaintedAboveTheDrawing) {
     EXPECT_FALSE(runner().hotGrip());
     EXPECT_EQ(view()->grab().toImage().pixelColor(pixel),
               QColor(style.grip.r, style.grip.g, style.grip.b));
+}
+
+TEST_F(DrawingAidsTest, PanningKeepsTheClosedHandCursorWhileThePointerMoves) {
+    const QPointF start = view()->rect().center();
+    QTest::mousePress(view(), Qt::MiddleButton, {}, start.toPoint());
+    EXPECT_EQ(view()->cursor().shape(), Qt::ClosedHandCursor);
+    QTest::mouseMove(view(), (start + QPointF{20.0, 10.0}).toPoint());
+    EXPECT_EQ(view()->cursor().shape(), Qt::ClosedHandCursor);
+    QTest::mouseRelease(view(), Qt::MiddleButton, {}, (start + QPointF{20.0, 10.0}).toPoint());
+}
+
+TEST_F(DrawingAidsTest, ArcAndStraightExtensionGuidesArePaintedUntilReleased) {
+    view()->setView({90.0, -50.0}, 0.2);
+    editor().beginTransaction("Test geometry");
+    [[maybe_unused]] const core::EntityId arcId =
+        editor().add(core::Arc{{100.0, -60.0}, 20.0, 0.0, core::kPi / 2.0});
+    [[maybe_unused]] const core::EntityId lineId =
+        editor().add(core::Line{{60.0, -60.0}, {70.0, -60.0}});
+    editor().commit();
+    view()->update();
+    setSnapModes(core::SnapModes{false, false, false, false, false, false, false, false, false,
+                                 true, false});
+    ASSERT_FALSE(aids().tracking);
+    enter("LINE");
+    mutableRunner().pointerHeld({100.0, -40.0});
+    mutableRunner().pointerHeld({70.0, -60.0});
+    mutableRunner().pointerMoved({80.3, -59.8});
+    view()->update();
+    QCoreApplication::processEvents();
+
+    const auto& guides = runner().tracking().guides;
+    ASSERT_EQ(guides.size(), 2U);
+    const auto arc = std::find_if(guides.begin(), guides.end(),
+                                  [](const auto& guide) { return guide.arc.has_value(); });
+    const auto straight = std::find_if(guides.begin(), guides.end(),
+                                       [](const auto& guide) { return !guide.arc.has_value(); });
+    ASSERT_NE(arc, guides.end());
+    ASSERT_NE(straight, guides.end());
+    if (!arc->arc.has_value()) {
+        FAIL() << "arc guide has no arc geometry";
+    }
+    const core::ArcGeometry arcGeometry = arc->arc.value_or(core::ArcGeometry{});
+    const double middleAngle = arcGeometry.startAngle + arcGeometry.sweep * 0.5;
+    const core::Vec2 arcPoint =
+        arcGeometry.center +
+        core::Vec2{std::cos(middleAngle), std::sin(middleAngle)} * arcGeometry.radius;
+    const QPoint arcPixel = screen(arcPoint).toPoint();
+    const QPoint straightPixel = screen(straight->origin + straight->direction * 0.5).toPoint();
+    const QRect arcArea{arcPixel - QPoint{12, 12}, QSize{25, 25}};
+    const QRect straightArea{straightPixel - QPoint{12, 12}, QSize{25, 25}};
+    EXPECT_GT(orangePixelsIn(arcArea), 0U);
+    EXPECT_GT(markerPixelsIn(straightArea), 0U);
+
+    mutableRunner().pointerHeld({100.0, -40.0});
+    mutableRunner().pointerHeld({70.0, -60.0});
+    mutableRunner().pointerMoved({80.3, -59.8});
+    view()->update();
+    QCoreApplication::processEvents();
+    EXPECT_TRUE(runner().tracking().guides.empty());
+    EXPECT_EQ(orangePixelsIn(arcArea), 0U);
+    EXPECT_EQ(markerPixelsIn(straightArea), 0U);
+}
+
+TEST_F(DrawingAidsTest, CurrentVertexCircleFollowsEditsUndoAndSelection) {
+    view()->setView({70.0, 30.0}, 1.0);
+    const core::EntityId outline = document().entities().front().id;
+    ASSERT_TRUE(mutableRunner().replaceSelection({outline}));
+    view()->setCurrentVertex(outline, 1);
+    const auto hasCircleAt = [&](const core::Vec2& point) {
+        const QPoint center = screen(point).toPoint();
+        const QImage image = view()->grab().toImage();
+        std::size_t count = 0;
+        for (int y = center.y() - 9; y <= center.y() + 9; ++y) {
+            for (int x = center.x() - 9; x <= center.x() + 9; ++x) {
+                const int squared =
+                    (x - center.x()) * (x - center.x()) + (y - center.y()) * (y - center.y());
+                const QColor color = image.pixelColor(x, y);
+                if (squared >= 36 && squared <= 100 && color.blue() > color.green() + 20 &&
+                    color.green() > color.red() + 20) {
+                    ++count;
+                }
+            }
+        }
+        return count > 12;
+    };
+    EXPECT_TRUE(hasCircleAt(kVertex));
+
+    const auto& old = std::get<core::Polyline>(document().find(outline)->entity);
+    std::vector<core::PolylineVertex> vertices(old.vertices().begin(), old.vertices().end());
+    vertices.at(1).position = {100.0, 0.0};
+    core::Polyline changed(std::move(vertices), old.isClosed());
+    editor().beginTransaction("Properties");
+    ASSERT_TRUE(editor().replace(outline, std::move(changed)));
+    editor().commit();
+    view()->update();
+    EXPECT_FALSE(hasCircleAt(kVertex));
+    EXPECT_TRUE(hasCircleAt({100.0, 0.0}));
+
+    enter("U");
+    // U clears the selection (docs/adr/0008), and with it the circle.
+    EXPECT_TRUE(runner().selection().isEmpty());
+    EXPECT_FALSE(hasCircleAt(kVertex));
+    ASSERT_TRUE(
+        mutableRunner().replaceSelection(std::vector<core::EntityId>{document().entities()[1].id}));
+    view()->update();
+    QCoreApplication::processEvents();
+    EXPECT_FALSE(hasCircleAt(kVertex));
+}
+
+TEST_F(DrawingAidsTest, HatchSourcesAreHighlightedOnlyWhileTheCommandRuns) {
+    view()->setView({70.0, 30.0}, 1.0);
+    enter("-HATCH");
+    click({30.0, 22.0});
+    // The dynamic input box follows the pointer: keep it off the bottom side.
+    moveScreen(QPointF{5.0, 5.0});
+    ASSERT_FALSE(runner().highlighted().empty());
+    const QPoint bottom = screen({60.0, 0.0}).toPoint();
+    const auto highlightedPixels = [&] {
+        const QImage image = view()->grab().toImage();
+        std::size_t count = 0;
+        for (int y = bottom.y() - 2; y <= bottom.y() + 2; ++y) {
+            for (int x = bottom.x() - 10; x <= bottom.x() + 10; ++x) {
+                const QColor color = image.pixelColor(x, y);
+                if (color.blue() > color.green() + 20 && color.green() > color.red() + 20) {
+                    ++count;
+                }
+            }
+        }
+        return count;
+    };
+    EXPECT_GT(highlightedPixels(), 0U);
+
+    events::press(input(), Qt::Key_Return);
+    EXPECT_TRUE(runner().highlighted().empty());
+    EXPECT_EQ(highlightedPixels(), 0U);
+}
+
+TEST_F(DrawingAidsTest, SnapMagnetMovesOnlyTheDrawnCursorToTheSnap) {
+    view()->setView({70.0, 30.0}, 1.0);
+    setSnapMagnet(false);
+    enter("LINE");
+    const QPointF nearVertex = screen(kVertex) + QPointF{3.0, 4.0};
+    moveScreen(nearVertex);
+    ASSERT_TRUE(runner().activeSnap());
+    EXPECT_NE(view()->cursor().shape(), Qt::BlankCursor);
+    // The dynamic input box can cover the lower arm; sample the left arm instead.
+    const QPoint arm = screen(kVertex).toPoint() + QPoint{-20, 0};
+    const QColor cursor = window().theme() == Theme::Dark ? Qt::white : Qt::black;
+    EXPECT_NE(view()->grab().toImage().pixelColor(arm), cursor);
+
+    events::press(input(), Qt::Key_Escape);
+    setSnapMagnet(true);
+    enter("LINE");
+    moveScreen(nearVertex);
+    ASSERT_TRUE(runner().activeSnap());
+    EXPECT_EQ(view()->cursor().shape(), Qt::BlankCursor);
+    EXPECT_EQ(view()->grab().toImage().pixelColor(arm), cursor);
 }
 
 TEST_F(DrawingAidsTest, OrthoKeepsTheSecondVertexOnTheAxesOfTheFirst) {

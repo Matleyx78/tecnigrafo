@@ -209,6 +209,9 @@ Q_SIGNALS:
     /// shown now lets it go.
     void sessionAboutToChange();
 
+    /// The user browsed to `vertex` of `entity` in Current Vertex.
+    void currentVertexChanged(core::EntityId entity, int vertex);
+
 protected:
     void changeEvent(QEvent* event) override;
 
@@ -256,6 +259,7 @@ private:
     PropertyGridModel* m_model;
     PropertyGridDelegate* m_delegate;
     QTreeView* m_grid;
+    QToolButton* m_editMText;
     QLabel* m_message;
     // The width of the names, which the user can drag; a new model keeps it.
     int m_nameWidth;

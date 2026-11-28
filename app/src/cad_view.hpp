@@ -91,6 +91,8 @@ public:
     /// Draws with `style` from now on: the colours of grid, entities,
     /// preview, selection and snap marker.
     void setStyle(const render::SceneStyle& style);
+    void setCurrentVertex(core::EntityId entity, int vertex);
+    bool editMText(core::EntityId entity);
 
 signals:
     /// Cursor position in drawing units.
@@ -118,6 +120,7 @@ private:
     void closeTextEditor();
     /// The editor's confirmation, or Esc, handed to the runner.
     void confirmText();
+    void confirmPropertyText(core::EntityId id);
     void cancelText();
     /// The left double click at `screenPos`: TEXTEDIT on the text there.
     /// False, and nothing done, when the runner is not at "Command:" or no
@@ -140,6 +143,8 @@ private:
     /// After the viewport, which it keeps a reference to.
     TextEditorOverlay* m_textEditor{nullptr};
     QTimer* m_holdTimer{nullptr};
+    std::optional<std::pair<core::EntityId, int>> m_currentVertex;
+    std::optional<core::EntityId> m_propertyText;
 };
 
 }  // namespace tg::app

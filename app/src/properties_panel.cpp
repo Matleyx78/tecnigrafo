@@ -3,6 +3,7 @@
 
 #include "properties_panel.hpp"
 
+#include "cad_view.hpp"
 #include "property_widgets.hpp"
 #include "quick_select_dialog.hpp"
 #include "tg/core/math.hpp"
@@ -301,6 +302,7 @@ PropertiesPanel::PropertiesPanel(QWidget* parent)
       m_model(new PropertyGridModel(m_noDocument, this)),
       m_delegate(new PropertyGridDelegate(this)),
       m_grid(new QTreeView(this)),
+      m_editMText(new QToolButton(m_grid->viewport())),
       m_message(new QLabel(this)),
       m_nameWidth(kNameColumnWidth) {
     setObjectName(QStringLiteral("propertiesPanel"));
@@ -329,6 +331,21 @@ PropertiesPanel::PropertiesPanel(QWidget* parent)
     // A click on a value opens its editor, as in AutoCAD.
     m_grid->setEditTriggers(QAbstractItemView::CurrentChanged | QAbstractItemView::SelectedClicked |
                             QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed);
+    m_editMText->setObjectName(QStringLiteral("editMTextButton"));
+    m_editMText->setText(QStringLiteral("…"));
+    m_editMText->setToolTip(tr("Open text editor"));
+    m_editMText->hide();
+    connect(m_editMText, &QToolButton::clicked, this, [this] {
+        const std::vector<core::EntityId> ids = targets();
+        if (ids.size() != 1) {
+            return;
+        }
+        if (QWidget* owner = parentWidget()) {
+            if (auto* view = owner->findChild<CadView*>()) {
+                view->editMText(ids.front());
+            }
+        }
+    });
 
     auto* head = new QHBoxLayout;
     head->setSpacing(kSpacing);
@@ -371,6 +388,24 @@ PropertiesPanel::PropertiesPanel(QWidget* parent)
     connect(m_grid, &QTreeView::clicked, this, &PropertiesPanel::toggleGroup);
     new ColumnDivider(m_grid, [this](int width) { m_nameWidth = width; });
     connectModel();
+    const auto browseVertex = [this](bool next) {
+        const bool moved = next ? m_model->nextVertex() : m_model->previousVertex();
+        const std::vector<core::EntityId> ids = targets();
+        if (!moved || ids.size() != 1) {
+            return;
+        }
+        const int vertex = m_model->currentVertex();
+        emit currentVertexChanged(ids.front(), vertex);
+        if (QWidget* owner = parentWidget()) {
+            if (auto* view = owner->findChild<CadView*>()) {
+                view->setCurrentVertex(ids.front(), vertex);
+            }
+        }
+    };
+    connect(m_delegate, &PropertyGridDelegate::previousVertexRequested, this,
+            [browseVertex] { browseVertex(false); });
+    connect(m_delegate, &PropertyGridDelegate::nextVertexRequested, this,
+            [browseVertex] { browseVertex(true); });
 
     updateIcons();
     refresh();
@@ -388,10 +423,6 @@ void PropertiesPanel::connectModel() {
     connect(m_model, &PropertyGridModel::linetypeScaleEntered, this,
             &PropertiesPanel::enterLinetypeScale);
     connect(m_model, &PropertyGridModel::ownValueEntered, this, &PropertiesPanel::enterOwnValue);
-    connect(m_delegate, &PropertyGridDelegate::previousVertexRequested, m_model,
-            &PropertyGridModel::previousVertex);
-    connect(m_delegate, &PropertyGridDelegate::nextVertexRequested, m_model,
-            &PropertyGridModel::nextVertex);
 }
 
 PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runner, QWidget* parent)
@@ -673,6 +704,21 @@ void PropertiesPanel::showGeometry() {
         }
     }
     showGroups();
+    m_editMText->hide();
+    if (ids.size() == 1) {
+        const core::EntityRecord* record = document().find(ids.front());
+        if (record != nullptr && std::holds_alternative<core::MText>(record->entity)) {
+            const int row = m_model->rowNamed(PropertyGridModel::kGeometryGroup, tr("Contents"));
+            if (row >= 0) {
+                const QRect cell = m_grid->visualRect(
+                    m_model->rowValueIndex(PropertyGridModel::kGeometryGroup, row));
+                const int side = std::max(18, cell.height());
+                m_editMText->setGeometry(cell.right() - side + 1, cell.top(), side, side);
+                m_editMText->show();
+                m_editMText->raise();
+            }
+        }
+    }
 }
 
 void PropertiesPanel::showOwnEditors() {
