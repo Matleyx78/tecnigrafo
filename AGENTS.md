@@ -160,7 +160,7 @@ Vale ogni riga che corrisponde.
 | Se | Leggi anche |
 |---|---|
 | issue con titolo `[X.Y-PN]` o `[FN]`, o etichetta `pacchetto` | [pacchetto.md](docs/agenti/pacchetto.md) |
-| issue con titolo `[X.Y-RN]` o etichetta `riferimenti`; tocchi `tests/verifica/casi/` o `sorgenti.json` | [riferimenti.md](docs/agenti/riferimenti.md) |
+| issue con titolo `[X.Y-RN]` o etichetta `riferimenti`; tocchi `tests/verifica/casi/`, `sorgenti.json` o `tests/verifica/sorgenti/` | [riferimenti.md](docs/agenti/riferimenti.md) |
 | commenti una pull request non tua; la descrizione comincia con **Revisione della correzione**; modifichi una scheda in `docs/tappe/X.Y/` della tappa aperta | [revisione.md](docs/agenti/revisione.md) |
 | lavori a una issue o a una pull request, comunque tu sia stato avviato (commento su GitHub o chat); il messaggio cita `docs/agenti/catena.md`, un giro di revisione o una «Decisione del responsabile» | [catena.md](docs/agenti/catena.md) |
 | la scheda cita intestazioni `solid_space/…`; tocchi `third_party/solid-space` o file che le includono; usi `scripts/richiesta.sh` | [contratto.md](docs/agenti/contratto.md) |

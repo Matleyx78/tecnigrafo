@@ -688,8 +688,12 @@ def main():
     if not args.check_only:
         source_errors = []
         print_standard_answers()
-        manifest = args.cases.parent / "sorgenti.json"
-        sources = json.loads(manifest.read_text(encoding="utf-8"))["sources"] if manifest.exists() else []
+        # sorgenti.json, then one file per block of references in sorgenti/
+        # during a stage (docs/verifica/casi.md).
+        manifests = [args.cases.parent / "sorgenti.json"]
+        manifests += sorted((args.cases.parent / "sorgenti").glob("*.json"))
+        sources = [source for manifest in manifests if manifest.exists()
+                   for source in json.loads(manifest.read_text(encoding="utf-8"))["sources"]]
         if not sources:
             print("No public sources: nothing to print.")
         for source in sources:

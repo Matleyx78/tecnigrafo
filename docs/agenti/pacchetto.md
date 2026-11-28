@@ -55,7 +55,8 @@ riferimenti (`[X.Y-RTN]`)".
 
 ### In un pacchetto di lavoro
 
-- Non modificare mai `tests/verifica/casi/` né `tests/verifica/sorgenti.json`.
+- Non modificare mai `tests/verifica/casi/`, `tests/verifica/sorgenti.json` né
+  `tests/verifica/sorgenti/`.
 - Cancella da `tests/verifica/in-attesa/` i file dei riferimenti del tuo
   pacchetto, uno per ogni sua issue di riferimenti: `<X.Y>-RT<N>.txt`, con una
   lettera minuscola in fondo (`<X.Y>-RT<N>a.txt`) se i riferimenti sono divisi

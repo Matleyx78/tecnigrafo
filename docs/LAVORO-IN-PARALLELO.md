@@ -395,8 +395,8 @@ un agente senza pacchetto preciso sconfina.
 - Il responsabile unisce **una pull request alla volta**, con *Squash and merge*,
   solo con la CI verde. Prima guarda la scheda **Files changed**: i file devono
   essere quelli del pacchetto, e una pull request di lavoro non deve toccare
-  `tests/verifica/casi/` né `tests/verifica/sorgenti.json` (la CI lo controlla
-  comunque).
+  `tests/verifica/casi/`, `tests/verifica/sorgenti.json` né
+  `tests/verifica/sorgenti/` (la CI lo controlla comunque).
 - Dopo ogni merge, le altre pull request aperte mostrano il pulsante **Update
   branch**: si preme, la pull request si allinea a `main` e la CI riparte.
 - Se due pacchetti toccano lo stesso file comune (per esempio
@@ -417,7 +417,10 @@ dopo 14 giorni senza notizie il pacchetto torna libero (CONTRIBUTING.md).
 ## 8. Chiudere la tappa
 
 Quando tutte le issue del milestone sono chiuse, un agente (di norma Codex) apre
-la **pull request di chiusura**, sul ramo `docs/chiusura-X.Y`, che:
+prima, se `tests/verifica/sorgenti/` ha dei file, la pull request di soli
+riferimenti che li raccoglie in `sorgenti.json` (`scripts/sorgenti.py
+raccogli`; [agenti/chiusura.md](agenti/chiusura.md)), e dopo il suo merge la
+**pull request di chiusura**, sul ramo `docs/chiusura-X.Y`, che:
 
 - spunta nel documento della tappa ogni criterio di chiusura, indicando per
   ciascuno i casi di verifica o i test che lo provano, oppure "da provare a mano";

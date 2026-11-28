@@ -583,9 +583,9 @@ Scrivi i casi di verifica del pacchetto $work prima che il lavoro cominci: ogni 
 
 ## In breve
 
-- Tocca solo \`tests/verifica/casi/\`, \`tests/verifica/sorgenti.json\` e \`tests/verifica/in-attesa/\`.
+- Tocca solo \`tests/verifica/casi/\`, il tuo file \`tests/verifica/sorgenti/$tappa-$id.json\` e \`tests/verifica/in-attesa/\`.
 - Valori attesi da calcoli, file pubblici o programmi di riferimento, **mai** eseguendo Tecnigrafo, \`tecnigrafo-script\` o \`tecnigrafo-mcp\`.
-- File presi dal web: indirizzo, versione, hash SHA-256 e licenza in \`sorgenti.json\`, link alla licenza nella pull request.
+- File presi dal web: indirizzo, versione, hash SHA-256 e licenza nel tuo file \`tests/verifica/sorgenti/$tappa-$id.json\` (formato di \`sorgenti.json\`), mai in \`sorgenti.json\`; link alla licenza nella pull request.
 - I nuovi casi vanno nel tuo file \`tests/verifica/in-attesa/$tappa-$id.txt\` (il tag di questo blocco, con la lettera se è diviso: \`$tappa-${ref_prefix}<N>a.txt\`), una riga \`<area>/<nome> #<issue del lavoro>\` per caso.
 - La pull request è finita con la CI verde, controlli anticipati compresi ([ADR 0037]($blob/docs/adr/0037-controllo-anticipato-dei-riferimenti.md)): i casi si possono eseguire per sapere se sono validi, mai per ricavare un valore atteso. Non si aggiunge \`esente\`, e lo si toglie dai casi che si correggono.
 EOF

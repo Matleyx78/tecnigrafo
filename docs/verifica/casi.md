@@ -294,6 +294,18 @@ stanno nel repository: questo file li elenca, e prima dei test CMake li scarica
 e ne controlla l'hash (pacchetto P4). La CI li conserva in una cache, così i
 test girano senza rete.
 
+**Un file per blocco di riferimenti.** Durante una tappa ogni pacchetto di
+riferimenti scrive i suoi file in `tests/verifica/sorgenti/<X.Y>-RT<N>.json`,
+lo stesso nome del suo file di `in-attesa/`, con lo stesso formato; non
+aggiunge voci in fondo a `sorgenti.json`, così due blocchi in parallelo non
+vanno in conflitto. CMake, l'oracolo e la CI leggono `sorgenti.json` più tutti
+i file della cartella, e un nome deve essere unico in tutto l'insieme. Diverso
+da `in-attesa/`: le sorgenti servono per sempre, quindi il pacchetto di lavoro
+non le cancella. Si raccolgono alla chiusura della tappa, quando non corre
+nient'altro, con `scripts/sorgenti.py raccogli`, che sposta le voci in
+`sorgenti.json` e svuota la cartella ([DECISIONI.md](../DECISIONI.md),
+2026-11-28). `scripts/sorgenti.py controlla` verifica formato e nomi.
+
 ```json
 {
   "format": 1,
