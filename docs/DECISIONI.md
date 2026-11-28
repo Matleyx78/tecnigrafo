@@ -3050,15 +3050,20 @@ i rimandi ai documenti che cambia.
     `RELAY_PAT` ([agenti/catena.md](agenti/catena.md), «Sentinella»; ADR 0053,
     riga Corretto:);
   - **Catena 4:** `scripts/passa.sh <agente> <numero> smistamento` e la
-    sezione «Smistamento» di catena.md;
+    sezione «Smistamento» di catena.md, come in solid-space: il revisore con
+    una [decisione] passa all'esecutore, che corregge lui le [bloccante] che
+    una regola decide; l'esecutore fermo su un buco passa al revisore, che lo
+    fa ripartire;
   - **Catena 7:** *Dopo il merge* avvia anche le issue liberate dal merge,
     fino a 8 catene aperte (`scripts/liberati.py`);
-  - **Catena 6:** il comando `/unisci` del responsabile
-    (`.github/workflows/unisci.yml`, `scripts/unisci.py`; guida, A3). Gli
-    agenti, che scrivono con lo stesso account, non scrivono mai un commento
-    che sia solo `/unisci` ([AGENTS.md](../AGENTS.md), «Regole che non si
-    possono violare»), e il workflow agisce solo su un commento che è
-    esattamente `/unisci`;
+  - **Catena 6:** il comando di merge del responsabile è l'**etichetta
+    `AAA-UNISCI`**, non un commento `/unisci` come nella proposta: il
+    responsabile la preferisce, e un'etichetta non si scrive per sbaglio in
+    un testo (`.github/workflows/unisci.yml`, con `pull_request_target`, che
+    esegue sempre i file di `main`; `scripts/unisci.py`; guida, A3). Il
+    workflow la toglie alla fine, unita o no la pull request. Gli agenti, che
+    usano lo stesso account, non mettono né tolgono mai quell'etichetta
+    ([AGENTS.md](../AGENTS.md), «Regole che non si possono violare»);
   - **Catena 13:** un file di sorgenti per ogni blocco di riferimenti in
     `tests/verifica/sorgenti/`, letti da CMake, dall'oracolo e dalla CI con
     nomi unici fra tutti i file; alla chiusura una pull request di soli

@@ -4,7 +4,7 @@
 #
 # The merge command of the owner (docs/GUIDA-RESPONSABILE.md, A3; docs/DECISIONI.md,
 # 2026-11-28, Catena 6), run by .github/workflows/unisci.yml when the owner
-# writes a comment that is exactly `/unisci` on a pull request. In order:
+# puts the label AAA-UNISCI on a pull request. In order:
 #
 # 1. the review, as the rules ask: every pull request has `pronta`; a package
 #    (`[X.Y-PTN]`, `[FN]`) also a report «Revisione di <agent>» of the agent
@@ -20,6 +20,8 @@
 #    RELAY_PAT secret), so that "Dopo il merge" starts.
 #
 # When a step fails it answers in the pull request why, and merges nothing.
+# Either way the label AAA-UNISCI is taken away at the end, so that putting it
+# back tries again.
 # The pull requests that touch app/ or resources/ keep the gallery to look at
 # before the command (A3, point 2): the script cannot judge it.
 #
@@ -51,6 +53,7 @@ CORRECTION = "Revisione della correzione: da fare"
 REPORT = re.compile(r"^\s*\**Revisione di (Claude|Codex)\b", re.IGNORECASE | re.MULTILINE)
 CORRECTION_REPORT = re.compile(r"^\s*\**Verbale della revisione della correzione", re.MULTILINE)
 GREEN = {"success", "skipped", "neutral"}
+LABEL = "AAA-UNISCI"
 
 
 def manca_revisione(pr: dict, labels: set[str], comments: list[str],
@@ -134,7 +137,7 @@ def answer(gh: GitHub, number: int, text: str, dry_run: bool) -> int:
     print(text)
     if not dry_run:
         gh.call("POST", f"/issues/{number}/comments",
-                {"body": f"**/unisci** non eseguito: {text}"})
+                {"body": f"**{LABEL}** non eseguito: {text} Togli e rimetti l'etichetta per riprovare."})
     return 1
 
 
@@ -206,7 +209,15 @@ def main(argv: list[str]) -> int:
         return 2
     gh = GitHub(os.environ.get("GITHUB_REPOSITORY", "Matleyx78/tecnigrafo"),
                 os.environ["GH_TOKEN"])
-    return unisci(gh, int(argv[1]), os.environ.get("DRY_RUN") == "1")
+    dry_run = os.environ.get("DRY_RUN") == "1"
+    try:
+        return unisci(gh, int(argv[1]), dry_run)
+    finally:
+        if not dry_run:
+            try:
+                gh.call("DELETE", f"/issues/{argv[1]}/labels/{LABEL}")
+            except urllib.error.HTTPError:
+                pass
 
 
 if __name__ == "__main__":

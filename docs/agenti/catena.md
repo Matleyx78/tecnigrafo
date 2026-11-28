@@ -225,12 +225,14 @@ non lo scegli tu.
 ## Smistamento
 
 Chi riceve uno smistamento (`scripts/passa.sh … smistamento`) è l'altro
-agente: prende in carico, legge le segnalazioni [decisione] dell'ultimo
-verbale o commento di arresto e controlla ognuna contro le regole esistenti
-(la scheda, gli ADR, [DECISIONI.md](../DECISIONI.md),
-[REGOLE-NUMERICHE.md](../REGOLE-NUMERICHE.md),
-[revisione.md](revisione.md)). Non cambia file e non fa commit. Lascia **un
-solo** commento che comincia con «Smistamento di <nome dell'agente>»:
+agente: di norma l'**esecutore**, a cui il revisore passa le sue [decisione];
+il **revisore** quando è l'esecutore a fermarsi su un buco della scheda.
+Prende in carico, legge le segnalazioni [decisione] dell'ultimo verbale o
+commento di arresto e controlla ognuna contro le regole esistenti (la scheda,
+gli ADR, [DECISIONI.md](../DECISIONI.md),
+[REGOLE-NUMERICHE.md](../REGOLE-NUMERICHE.md), [revisione.md](revisione.md)).
+Lascia **un solo** commento che comincia con «Smistamento di <nome
+dell'agente>»:
 
 - una [decisione] che una regola esistente decide diventa **[bloccante]**, con
   la regola citata e l'esempio risolto;
@@ -241,17 +243,20 @@ Poi, in quest'ordine:
 
 - almeno una [decisione] rimasta: "Fermarsi per una decisione", punti 1–4,
   con il tuo commento come quello del punto 2;
-- altrimenti, su una pull request rivista: `scripts/passa.sh <esecutore>
-  <numero> correzioni <N>`, dove N è il giro che si era fermato;
-- altrimenti, per un esecutore fermo su un buco (nella issue, senza pull
-  request): `scripts/avvia.sh <issue> "Smistamento: applica le regole del
-  commento «Smistamento di <nome>»."`, che lo fa ripartire.
+- altrimenti, **se sei l'esecutore**: correggi tu le [bloccante] nate dallo
+  smistamento e quelle del giro, come in "Correzioni (esecutore)", e alla
+  fine `scripts/passa.sh <revisore> <numero> revisione <N+1>`, dove N è il
+  giro che si era fermato;
+- altrimenti, **se sei il revisore** di un esecutore fermo su un buco: non
+  cambi file e non fai commit; lo fai ripartire con `scripts/avvia.sh <issue>
+  "Smistamento: applica le regole del commento «Smistamento di <nome>»."`.
 
 Togli `AA-Presa in carico` e fermati. Il giro successivo del revisore
 controlla come la regola è stata applicata, quindi la revisione resta
 dell'altro agente; se il revisore ripropone lo stesso punto, va diretto al
-responsabile, senza un secondo smistamento ([DECISIONI.md](../DECISIONI.md),
-2026-11-28).
+responsabile, senza un secondo smistamento. Al giro 3 una [bloccante] nata
+dallo smistamento ferma come le altre ("Revisione") ([DECISIONI.md](../DECISIONI.md),
+2026-11-28; lo stesso in solid-space).
 
 ## Analisi di una CI rossa (revisore)
 

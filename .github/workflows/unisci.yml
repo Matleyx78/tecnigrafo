@@ -2,20 +2,22 @@
 # Copyright (C) 2026 The Tecnigrafo authors
 #
 # The merge command of the owner (docs/GUIDA-RESPONSABILE.md, A3;
-# docs/DECISIONI.md, 2026-11-28, Catena 6): a comment that is exactly
-# `/unisci`, written by the owner on a pull request, runs scripts/unisci.py,
-# which checks the review, the checks, `decisione` and «main rosso», updates
-# the branch with main when main has new code (and waits for the CI), then
-# squashes and merges with the owner's Signed-off-by line. It merges with the
-# RELAY_PAT secret, so "Dopo il merge" starts as after a merge by hand.
+# docs/DECISIONI.md, 2026-11-28, Catena 6): the label AAA-UNISCI, put by the
+# owner on a pull request, runs scripts/unisci.py, which checks the review,
+# the checks, `decisione` and «main rosso», updates the branch with main when
+# main has new code (and waits for the CI), then squashes and merges with the
+# owner's Signed-off-by line. It merges with the RELAY_PAT secret, so "Dopo il
+# merge" starts as after a merge by hand. The label is taken away at the end,
+# merged or not: to try again, put it back.
 #
-# The agents write with the owner's account too: they never write `/unisci`
-# (AGENTS.md). Several commands run one at a time, in order.
+# pull_request_target runs this file and the scripts as they are on main, never
+# the ones of the pull request. The agents use the owner's account too: they
+# never put AAA-UNISCI (AGENTS.md). Several labels run one at a time, in order.
 name: Unisci
 
 on:
-  issue_comment:
-    types: [created]
+  pull_request_target:
+    types: [labeled]
 
 permissions:
   contents: read
@@ -30,28 +32,15 @@ concurrency:
 jobs:
   unisci:
     if: >-
-      github.event.issue.pull_request &&
-      github.event.comment.user.login == github.repository_owner &&
-      startsWith(github.event.comment.body, '/unisci')
+      github.event.label.name == 'AAA-UNISCI' &&
+      github.event.sender.login == github.repository_owner
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
-      - name: Only a comment that is exactly /unisci
-        id: comando
-        env:
-          BODY: ${{ github.event.comment.body }}
-        run: |
-          text="$(printf '%s' "$BODY" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-          if [ "$text" = /unisci ]; then
-            echo "ok=1" >> "$GITHUB_OUTPUT"
-          else
-            echo "The comment is not exactly /unisci: nothing to do."
-          fi
+      # The default branch, not the head of the pull request.
       - uses: actions/checkout@v7
-        if: steps.comando.outputs.ok == '1'
       - name: Merge
-        if: steps.comando.outputs.ok == '1'
         env:
           GH_TOKEN: ${{ secrets.RELAY_PAT }}
-          PR: ${{ github.event.issue.number }}
+          PR: ${{ github.event.pull_request.number }}
         run: python3 scripts/unisci.py "$PR"

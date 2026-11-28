@@ -226,6 +226,7 @@ class Passaggio(unittest.TestCase):
             "report already written": (pr_item(comments=[comment("Revisione di Claude\n\nGiro di revisione: 1")]),
                                        True, "codex"),
             "analysis": (pr_item(comments=[comment("Analisi di Claude: la causa …")]), True, "codex"),
+            "triage": (pr_item(comments=[comment("Smistamento di Codex\n\n[bloccante] …")]), True, "claude"),
             "hand-over already done": (pr_item(comments=[comment(
                 "@claude [modello: opus] Rivedi questa pull request come dice docs/agenti/catena.md "
                 "in \"Revisione (revisore)\" (giro 1).")]), True, "codex"),

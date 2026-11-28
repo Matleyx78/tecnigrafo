@@ -2,7 +2,7 @@
 # Copyright (C) 2026 The Tecnigrafo authors
 #
 # Tests of scripts/unisci.py, without network: the checks of the merge
-# command `/unisci` (docs/GUIDA-RESPONSABILE.md, A3).
+# label AAA-UNISCI (docs/GUIDA-RESPONSABILE.md, A3).
 #
 #     python3 -m unittest discover -s scripts -p '*_test.py'
 

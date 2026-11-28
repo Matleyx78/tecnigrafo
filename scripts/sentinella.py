@@ -31,7 +31,8 @@
 # Before labelling a pull request `ferma`, the sentinel checks whether the
 # next step is one and certain (docs/DECISIONI.md, 2026-11-28, Catena 2): the
 # CI of the last commit is green, `AA-Presa in carico` is gone, there is no
-# `decisione`, no review report, analysis or earlier hand-over to review. Then
+# `decisione`, no review report, triage, analysis or earlier hand-over to
+# review. Then
 # it takes the step itself and says so in a comment:
 # - a pull request of a package (`[X.Y-PTN]`, `[FN]`) or a correction of the
 #   specs ("Revisione della correzione: da fare"): scripts/passa.sh to the
@@ -70,7 +71,7 @@ AGENT_START = re.compile(r"^\s*@(?:claude|codex)\b", re.IGNORECASE)
 MAX_IDLE = 24 * 60
 # A review report, an analysis or a review hand-over already written: after
 # them the next step is not certain any more.
-REPORT = re.compile(r"Giro di revisione:|^\s*\**(?:Revisione di |Analisi di |Ripresa dopo la decisione"
+REPORT = re.compile(r"Giro di revisione:|^\s*\**(?:Revisione di |Analisi di |Smistamento di |Ripresa dopo la decisione"
                     r"|Verbale della revisione della correzione)", re.MULTILINE)
 REVIEW_HANDOVER = re.compile(r"Revisione \(revisore\)|Passaggio fatto dalla sentinella")
 REFERENCES_TITLE = re.compile(r"\[\d+\.\d+(?:\.\d+)?-RT\d+[a-z]?\]")

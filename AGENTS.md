@@ -68,9 +68,9 @@ gh api -X DELETE "repos/Matleyx78/tecnigrafo/issues/<numero>/labels/AA-Presa%20i
 - Mai la chiocciola davanti al nome di un agente, nemmeno in un esempio o fra
   apici: ogni menzione avvia una sessione, e i passaggi si fanno solo con
   `scripts/passa.sh`.
-- Mai un commento che sia solo `/unisci`: è il comando di merge del
-  responsabile ([GUIDA-RESPONSABILE.md](docs/GUIDA-RESPONSABILE.md), A3), e
-  l'account con cui scrivi è il suo.
+- Mai l'etichetta `AAA-UNISCI`, né aggiungerla né toglierla: è il comando di
+  merge del responsabile ([GUIDA-RESPONSABILE.md](docs/GUIDA-RESPONSABILE.md),
+  A3), e l'account con cui scrivi è il suo.
 - Ogni file nuovo inizia con:
   ```cpp
   // SPDX-License-Identifier: GPL-3.0-or-later
