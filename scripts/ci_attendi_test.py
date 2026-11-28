@@ -136,3 +136,53 @@ class Approval(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# A fake for a commit with no run: STATE is the mergeable_state of the pull
+# request, which also answers for the commit.
+FAKE_NO_RUN = r'''#!/usr/bin/env bash
+path=$2
+echo "$path" >> "$FAKE_LOG"
+case $path in
+    */commits/*/pulls) echo '[{"number":773,"state":"open","head":{"sha":"abc1234"}}]' ;;
+    */pulls/*) echo "{\"head\":{\"sha\":\"abc1234\"},\"mergeable_state\":\"$STATE\"}" ;;
+    *runs\?head_sha=*) echo '{"workflow_runs":[]}' ;;
+    *) echo '{}' ;;
+esac
+'''
+
+
+@unittest.skipUnless(shutil.which("jq") and shutil.which("bash"), "needs bash and jq")
+class Conflict(unittest.TestCase):
+    def run_script(self, arg: str, state: str) -> subprocess.CompletedProcess:
+        with tempfile.TemporaryDirectory() as tmp:
+            bin_dir = Path(tmp) / "bin"
+            bin_dir.mkdir()
+            fake = bin_dir / "gh"
+            fake.write_text(FAKE_NO_RUN)
+            fake.chmod(0o755)
+            for tool in ("jq", "bash", "rm", "mktemp", "tail", "sed", "grep", "sleep", "cat"):
+                if shutil.which(tool):
+                    (bin_dir / tool).symlink_to(shutil.which(tool))
+            log = Path(tmp) / "log"
+            log.touch()
+            env = {"PATH": str(bin_dir), "FAKE_LOG": str(log), "HOME": tmp, "TMPDIR": tmp,
+                   "TG_ATTESA_PAUSA": "1", "TG_ATTESA_MAX": "2", "STATE": state}
+            return subprocess.run(["bash", str(SCRIPT), arg], env=env, capture_output=True, text=True)
+
+    def test_pull_request_in_conflict_exits_7(self):
+        done = self.run_script("773", "dirty")
+        self.assertEqual(done.returncode, 7, done.stdout + done.stderr)
+        self.assertIn("in conflict with main", done.stdout)
+
+    def test_commit_in_conflict_finds_its_pull_request(self):
+        done = self.run_script("abc1234", "dirty")
+        self.assertEqual(done.returncode, 7, done.stdout + done.stderr)
+        self.assertIn("pull request #773", done.stdout)
+
+    def test_no_run_without_conflict_keeps_exit_1(self):
+        for state in ("clean", "unknown", "blocked"):
+            with self.subTest(state=state):
+                done = self.run_script("773", state)
+                self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+                self.assertIn("No CI run", done.stderr)

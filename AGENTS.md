@@ -98,8 +98,10 @@ per farlo passare violeresti una regola, o se dopo tre tentativi non passa. Sono
 motivi estranei anche una CI che aspetta un'approvazione (`scripts/ci-attendi.sh`
 esce con 6) e una CI che fallisce solo nei casi della issue «main rosso» aperta:
 scrivilo nella pull request, con il rimando alla issue, e fermati **senza**
-l'etichetta `decisione`. Gli altri motivi per fermarsi sono nei file della
-tabella.
+l'etichetta `decisione`. Una pull request in conflitto con `main`, che non ha
+CI (`scripts/ci-attendi.sh` esce con 7), **non** è un motivo estraneo:
+aggiornala con `main` e vai avanti ([comandi.md](docs/agenti/comandi.md)). Gli
+altri motivi per fermarsi sono nei file della tabella.
 
 Prima di fermarti per un dubbio (un buco, un caso che sembra sbagliato),
 controlla se una regola esistente lo decide già, come fa chi rivede

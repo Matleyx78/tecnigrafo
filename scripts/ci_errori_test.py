@@ -105,5 +105,46 @@ class Annotations(unittest.TestCase):
         self.assertTrue(any(c.endswith("/runs/4279201937") for c in calls))
 
 
+# Three workflows on one commit: the CI (red, older), Submodule pointer
+# (green, newest) and the sentinel (red). Run ids tell them apart.
+FAKE_WORKFLOWS = r"""#!/usr/bin/env bash
+path=$2
+echo "gh - $path" >> "$FAKE_LOG"
+case $path in
+    */annotations*) echo '[{"annotation_level":"failure","path":"x","start_line":1,"title":"","message":"boom"}]' ;;
+    *runs\?head_sha=*) echo '{"workflow_runs":[
+        {"id":30,"path":".github/workflows/puntatore.yml","conclusion":"success"},
+        {"id":20,"path":".github/workflows/sentinella.yml","conclusion":"failure"},
+        {"id":11,"path":".github/workflows/ci.yml","conclusion":"failure"},
+        {"id":10,"path":".github/workflows/ci.yml","conclusion":"success"}]}' ;;
+    */jobs*) echo '{"jobs":[{"id":5,"name":"Linux","conclusion":"failure","steps":[{"name":"Build","conclusion":"failure"}]}]}' ;;
+    */runs/*) id=${path##*/}; echo "{\"id\":$id,\"status\":\"completed\",\"conclusion\":\"failure\",\"html_url\":\"u\"}" ;;
+    *) echo '{}' ;;
+esac
+"""
+
+
+@unittest.skipUnless(shutil.which("jq") and shutil.which("bash"), "needs bash and jq")
+class WhichRun(unittest.TestCase):
+    def test_commit_reads_the_ci_and_the_other_red_runs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bin_dir = Path(tmp) / "bin"
+            bin_dir.mkdir()
+            fake = bin_dir / "gh"
+            fake.write_text(FAKE_WORKFLOWS)
+            fake.chmod(0o755)
+            for tool in ("jq", "bash"):
+                (bin_dir / tool).symlink_to(shutil.which(tool))
+            log = Path(tmp) / "log"
+            log.touch()
+            env = {"PATH": str(bin_dir), "FAKE_LOG": str(log), "HOME": tmp}
+            out = subprocess.run(["bash", str(SCRIPT), "abc1234"], env=env, capture_output=True,
+                                 text=True, check=True).stdout
+        runs = [line.split(":")[0] for line in out.splitlines() if line.startswith("run ")]
+        # The newest CI run first, then the red sentinel; not the green pointer
+        # nor the older CI run.
+        self.assertEqual(runs, ["run 11", "run 20"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -18,7 +18,14 @@
 #
 #     ci-annota.sh --coda TITLE [log file]
 #
-# It prints nothing but one error annotation holding the last lines of the log.
+# It prints one error annotation holding the last lines of the log. Before it,
+# for the ezdxf oracle (tests/verifica/oracolo/controlla_casi.py), one error
+# annotation per failing question, on its line of domande.tgq, with the
+# expected and the ezdxf answers: in the log they come before the final
+# summary, so the tail alone cuts them off (docs/DECISIONI.md, 2026-11-28).
+#
+# A case that tecnigrafo-script finds invalid ("INVALID: <case>: <message>")
+# gets its own annotation, on the line the message names when it names one.
 #
 # Keep it compatible with bash 3.2 (macOS): no associative arrays, no quotes
 # in the replacement part of ${var//pattern/replacement}.
@@ -74,9 +81,59 @@ escape_property() {
     REPLY=${REPLY//','/%2C}
 }
 
+# Prints one error annotation, with file and line when there is a file.
+emit() {
+    local file=$1 line=$2 title=$3 properties=
+    file=${file//\\//}
+    file=${file#"$workspace/"}
+    if [[ -n $file ]]; then
+        escape_property "$file"
+        properties="file=$REPLY,line=$line,"
+    fi
+    escape_property "$title"
+    properties+="title=$REPLY"
+    escape_data "$4"
+    printf '::error %s::%s\n' "$properties" "$REPLY"
+}
+
 if [[ -n $tail_title ]]; then
+    log=$(cat)
+    # Failing questions of the ezdxf oracle: "<file>.tgq:<line>: <question>"
+    # followed by "  expected: ..." and "  ezdxf: ...".
+    oracle_question='^(.+\.tgq):([0-9]+): (.*)$'
+    oracle_expected='^[[:space:]]+expected: (.*)$'
+    oracle_answer='^[[:space:]]+(ezdxf|actual): +(.*)$'
+    oracle_count=0
+    q_file=
+    q_line=
+    q_text=
+    q_expected=
+    while IFS= read -r line || [[ -n $line ]]; do
+        line=${line%$'\r'}
+        if [[ $line =~ $oracle_question ]]; then
+            q_file=${BASH_REMATCH[1]}
+            q_line=${BASH_REMATCH[2]}
+            q_text=${BASH_REMATCH[3]}
+            q_expected=
+            case $q_text in
+                skipped*|'audit '*) q_file= ;;
+            esac
+        elif [[ -n $q_file && $line =~ $oracle_expected ]]; then
+            q_expected=${BASH_REMATCH[1]}
+        elif [[ -n $q_file && -n $q_expected && $line =~ $oracle_answer ]]; then
+            oracle_count=$((oracle_count + 1))
+            if (( oracle_count <= 9 )); then
+                emit "$q_file" "$q_line" "$tail_title" \
+                    "$q_text | expected: $q_expected | ${BASH_REMATCH[1]}: ${BASH_REMATCH[2]}"
+            fi
+            q_file=
+        fi
+    done <<< "$log"
+    if (( oracle_count > 9 )); then
+        printf '::error title=Additional diagnostics::%s more failing questions omitted; see the full log.\n' "$((oracle_count - 9))"
+    fi
     # The last lines of the log, each cut to 300 characters, as one annotation.
-    tail_text=$(tail -n 15 | cut -c1-300)
+    tail_text=$(printf '%s\n' "$log" | tail -n 15 | cut -c1-300)
     escape_property "$tail_title"
     tail_property=$REPLY
     escape_data "$tail_text"
@@ -151,6 +208,8 @@ failed='^[[:space:]]*FAILED: (.+: .+)$'
 report_line='^[[:space:]]+line ([0-9]+)$'
 expected_line='^[[:space:]]+expected: (.*)$'
 obtained_line='^[[:space:]]+obtained: (.*)$'
+invalid='^INVALID: ([^ ]+): (.+)$'
+invalid_at='^([^ ,:]+), line ([0-9]+): (.*)$'
 
 while IFS= read -r line || [[ -n $line ]]; do
     printf '%s\n' "$line"
@@ -216,7 +275,17 @@ while IFS= read -r line || [[ -n $line ]]; do
         finish_case
         case_message=${BASH_REMATCH[1]}
         case_name=${case_message%%: *}
-    elif [[ $parsed == pending:* || $parsed == passed:* || $parsed == INVALID:* ]]; then
+    elif [[ $parsed =~ $invalid ]]; then
+        finish_case
+        invalid_case=${BASH_REMATCH[1]#"$workspace/"}
+        invalid_message=${BASH_REMATCH[2]}
+        if [[ $invalid_message =~ $invalid_at ]]; then
+            annotate "$invalid_case/${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" \
+                "INVALID $invalid_case" "${BASH_REMATCH[3]}" ""
+        else
+            annotate "" "" "INVALID $invalid_case" "$invalid_message" ""
+        fi
+    elif [[ $parsed == pending:* || $parsed == passed:* ]]; then
         finish_case
     elif [[ -n $case_name && $parsed =~ $report_line ]]; then
         case_line=${BASH_REMATCH[1]}

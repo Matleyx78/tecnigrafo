@@ -12,6 +12,12 @@
 #     scripts/ci-errori.sh <pr number>  # the run of the last commit of that pull request
 #     scripts/ci-errori.sh <run id>     # that run
 #
+# For a commit or a pull request it reads the newest run of the CI workflow
+# (ci.yml), not the newest run of any workflow: Submodule pointer, the
+# sentinel and the others run on the same commit, and the newest of them is
+# often green while the CI is red. When other workflows of the commit are red
+# too, it prints them all, the CI first (docs/DECISIONI.md, 2026-11-28).
+#
 # A number of up to 6 digits is a pull request, a longer one a run id (run ids
 # have 10 digits and more).
 #
@@ -82,42 +88,66 @@ if [[ $ref =~ ^[0-9]{1,6}$ ]]; then
     echo "pull request #$pr: commit $ref"
 fi
 
+# The runs to report for a commit: the newest run of every workflow, keeping
+# the CI and every one that failed, the CI first. With nothing failed and no
+# CI, the newest run.
+runs_of_commit() {
+    api "repos/$repo/actions/runs?head_sha=$1&per_page=100" | jq -r '
+        [.workflow_runs[]]
+        | (group_by(.path // .name // "") | map(max_by(.id))) as $newest
+        | ([$newest[] | select((.path // "") | endswith("/ci.yml"))]
+           + [$newest[] | select(((.path // "") | endswith("/ci.yml") | not)
+                                 and (.conclusion == "failure" or .conclusion == "timed_out"))]) as $chosen
+        | (if ($chosen | length) > 0 then $chosen else (.[0:1]) end)
+        | .[].id'
+}
+
+# Prints why one run failed: the failed jobs, their failed steps and the
+# error annotations.
+report_run() {
+    local run=$1 summary jobs
+    summary=$(api "repos/$repo/actions/runs/$run" \
+        | jq -r '"run \(.id)\(if (.name // "") == "" then "" else " (\(.name))" end): \(.status) \(.conclusion // "-")  \(.html_url)"')
+    echo "$summary"
+    if [[ $summary == *" completed cancelled "* ]]; then
+        echo "Nothing failed: a newer push on the same branch replaced this run."
+        echo "Look at the run of the newest commit: scripts/ci-errori.sh <sha>."
+        return 0
+    fi
+
+    jobs=$(api "repos/$repo/actions/runs/$run/jobs?per_page=100" | jq -r '
+        .jobs[] | select(.conclusion == "failure" or .conclusion == "timed_out")
+        | "\(.id)\t\(.name)\t\([.steps[] | select(.conclusion == "failure" or .conclusion == "timed_out") | .name] | join(", "))"')
+
+    if [[ -z $jobs ]]; then
+        echo "No failed job (yet)."
+        return 0
+    fi
+
+    while IFS=$'\t' read -r id name step; do
+        echo
+        echo "== $name (job $id): failed step: ${step:-?}"
+        annotations "repos/$repo/check-runs/$id/annotations?per_page=50" | jq -r '
+            .[] | select(.annotation_level == "failure")
+            | select(.message | test("^Process completed with exit code") | not)
+            | "\(if .path == ".github" then "" else "\(.path):\(.start_line) " end)\(if (.title // "") == "" then "" else "[\(.title)] " end)\(.message | gsub("\n"; " | ") | .[0:400])"' \
+            || true
+    done <<< "$jobs"
+}
+
 if [[ $ref =~ ^[0-9]{7,}$ ]]; then
-    run=$ref
+    runs=$ref
 else
-    # The newest run of the commit; several appear after a re-run.
-    run=$(api "repos/$repo/actions/runs?head_sha=$ref&per_page=1" \
-        | jq -r '.workflow_runs[0].id // empty')
-    if [[ -z $run ]]; then
+    runs=$(runs_of_commit "$ref")
+    if [[ -z $runs ]]; then
         echo "No CI run for $ref yet: it has not started, or the commit was not pushed." >&2
         exit 1
     fi
 fi
 
-summary=$(api "repos/$repo/actions/runs/$run" \
-    | jq -r '"run \(.id): \(.status) \(.conclusion // "-")  \(.html_url)"')
-echo "$summary"
-if [[ $summary == *" completed cancelled "* ]]; then
-    echo "Nothing failed: a newer push on the same branch replaced this run."
-    echo "Look at the run of the newest commit: scripts/ci-errori.sh <sha>."
-    exit 0
-fi
-
-jobs=$(api "repos/$repo/actions/runs/$run/jobs?per_page=100" | jq -r '
-    .jobs[] | select(.conclusion == "failure" or .conclusion == "timed_out")
-    | "\(.id)\t\(.name)\t\([.steps[] | select(.conclusion == "failure" or .conclusion == "timed_out") | .name] | join(", "))"')
-
-if [[ -z $jobs ]]; then
-    echo "No failed job (yet)."
-    exit 0
-fi
-
-while IFS=$'\t' read -r id name step; do
-    echo
-    echo "== $name (job $id): failed step: ${step:-?}"
-    annotations "repos/$repo/check-runs/$id/annotations?per_page=50" | jq -r '
-        .[] | select(.annotation_level == "failure")
-        | select(.message | test("^Process completed with exit code") | not)
-        | "\(if .path == ".github" then "" else "\(.path):\(.start_line) " end)\(if (.title // "") == "" then "" else "[\(.title)] " end)\(.message | gsub("\n"; " | ") | .[0:400])"' \
-        || true
-done <<< "$jobs"
+first=1
+while read -r run; do
+    (( first )) || echo
+    first=0
+    report_run "$run"
+done <<< "$runs"

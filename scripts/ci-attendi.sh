@@ -30,6 +30,11 @@
 #      The script has written once "CI da approvare" in the pull request; stop
 #      without the label decisione (docs/agenti/catena.md, docs/DECISIONI.md,
 #      2026-11-19)
+#   7  there is no run because the pull request is in conflict with main
+#      (mergeable_state "dirty"): GitHub does not start pull_request workflows
+#      on it. Nothing is broken: update the branch with main (merge commit,
+#      never rebase), resolve the conflicts, push and wait again
+#      (docs/agenti/comandi.md; docs/DECISIONI.md, 2026-11-28)
 #
 # A run in action_required is not finished: the script writes the note in the
 # pull request once and goes on waiting, so an approval within the time lets
@@ -139,6 +144,29 @@ note_approval() {
     echo "$marker: written in pull request #$number."
 }
 
+# The pull request of the commit, for the conflict check: the one given, or
+# the first open one that has the commit at its head.
+pr_of_ref() {
+    if [[ -n ${pr:-} ]]; then
+        echo "$pr"
+        return 0
+    fi
+    api "repos/$repo/commits/$ref/pulls" 2>> "$err" \
+        | jq -r --arg sha "$ref" '[.[] | select(.state == "open" and (.head.sha | startswith($sha)))][0].number // empty'
+}
+
+# True when GitHub has computed that the pull request is in conflict with its
+# base. Right after a push the state is "unknown": then it is not a conflict
+# yet, and the next check asks again.
+in_conflict() {
+    local number state
+    number=$(pr_of_ref) || number=
+    [[ -n $number ]] || return 1
+    state=$(api "repos/$repo/pulls/$number" 2>> "$err" | jq -r '.mergeable_state // "unknown"') || return 1
+    [[ $state == dirty ]] || return 1
+    conflict_pr=$number
+}
+
 while :; do
     if reply=$( { if [[ -z $run ]]; then
                       api "repos/$repo/actions/workflows/$workflow/runs?head_sha=$ref&per_page=1" \
@@ -147,6 +175,12 @@ while :; do
                       api "repos/$repo/actions/runs/$run" | jq -c '.'
                   fi; } 2> "$err" ); then
         errors=0
+        if [[ -z $reply && -z $run ]] && in_conflict; then
+            echo "No CI run for $ref: pull request #$conflict_pr is in conflict with main, and GitHub"
+            echo "does not start the CI on it. Update the branch with main (merge commit, never rebase),"
+            echo "resolve the conflicts, push and run scripts/ci-attendi.sh again (docs/agenti/comandi.md)."
+            exit 7
+        fi
         if [[ -n $reply ]]; then
             run=$(jq -r '.id' <<< "$reply")
             status=$(jq -r '.status' <<< "$reply")
