@@ -27,8 +27,8 @@ Aggiornato alla versione **0.8.1**.
 
 | Stato | Comandi |
 |---|---|
-| completo | 20 |
-| presente | 46 |
+| completo | 28 |
+| presente | 50 |
 | assente | 25 |
 
 ## Disegno
@@ -67,12 +67,14 @@ Aggiornato alla versione **0.8.1**.
 | `DIMRADIUS` | `DRA`, `DIMRAD` | presente | 0.8 | *Mtext*, *Text* e *Angle* |
 | `DIMDIAMETER` | `DDI`, `DIMDIA` | presente | 0.8 | *Mtext*, *Text* e *Angle* |
 | `DIMSTYLE` | `D` | presente | 0.8 | `-DIMSTYLE` (anche `DIMSTYLE`) con *Save*, *Restore*, *STatus* e `?`, e le variabili di quota come comandi; una quota con adattamento diverso da `ISO-25` non si rigenera; mancano la finestra degli stili, *Variables* e *Apply* |
-| `HATCH` | `H` | presente | 0.8 | `-HATCH` (anche `HATCH`) con un punto interno o *Select objects*, motivi `ANSI31`, `SOLID` e `NET`, scala e angolo; non associativo; contorni solo fra linee, archi, cerchi e polilinee; i retini di AutoCAD con altri motivi si leggono e si vedono; manca la finestra |
+| `HATCH` | `H` | presente | 0.8 | `-HATCH` (anche `HATCH`) con un punto interno o *Select objects*, motivi `ANSI31`, `SOLID` e `NET`, scala e angolo; non associativo; contorni solo fra linee, archi, cerchi e polilinee; i retini di AutoCAD con altri motivi si leggono e si vedono; dalla 0.8.1 evidenzia il contorno e le isole prima della conferma; manca la finestra |
 | `HPISLANDDETECTION` | | completo | 0.8 | *Normal*, *Outer*, *Ignore* |
 | `HATCHEDIT` | `HE` | presente | 0.8.1 | `-HATCHEDIT` con *Properties*, *Origin* e *Style*; mancano contorni, associatività e ordine di disegno |
 | `BLOCK` | `B` | presente | 0.8 | `-BLOCK` (anche `BLOCK`): nome, punto base e oggetti, ridefinizione; manca la finestra |
 | `INSERT` | `I` | presente | 0.8 | `-INSERT` (anche `INSERT`) di un blocco o file DXF, `nome=file`, *Basepoint*, *Scale* (*Corner*, *XYZ*) e *Rotate*; dalla 0.8.1 chiede gli attributi secondo `ATTREQ`; manca la finestra |
 | `ATTDEF` | `ATT` | presente | 0.8.1 | `-ATTDEF` dalla riga di comando; niente attributi multiriga |
+| `ATTREQ` | | completo | 0.8.1 | sceglie fra i valori predefiniti e le domande durante l’inserimento |
+| `AFLAGS` | | completo | 0.8.1 | maschera dei modi per la prossima definizione di attributo |
 | `ATTEDIT` | `ATE` | presente | 0.8.1 | `-ATTEDIT` uno per uno e globale; manca `EATTEDIT` completo |
 | `ATTSYNC` | | presente | 0.8.1 | per nome o inserimento; aggiorna tutti gli inserimenti della definizione |
 | `BATTMAN` | | presente | 0.8.1 | modifica, riordina, elimina e sincronizza le definizioni; niente estrazione dati |
@@ -123,10 +125,10 @@ Aggiornato alla versione **0.8.1**.
 | `LAYER` | `LA` | presente | 0.6 | pannello agganciabile con tabella degli stati, colori, tipi e spessori; nella 0.7.5 barra di icone, ricerca per nome, stati a icone e linguetta quando non è fissato |
 | `-LAYER` | `-LA` | presente | 0.6 | dalla riga di comando per gli script; elenchi con virgola e caratteri jolly, opzioni principali |
 | `CLAYER` | | completo | 0.6 | imposta il layer corrente da riga di comando |
-| `PROPERTIES` | `PR`, `CH`, `MO`, `PROPS` | presente | 0.6 | pannello agganciabile; nella 0.7.5 griglia con *General* modificabile nella cella e *Geometry* in sola lettura, con lo scorrimento dei vertici delle polilinee |
+| `PROPERTIES` | `PR`, `CH`, `MO`, `PROPS` | presente | 0.6 | pannello agganciabile; nella 0.7.5 griglia con *General* modificabile nella cella e *Geometry* in sola lettura, con lo scorrimento dei vertici delle polilinee; dalla 0.8.1 mostra tutti i tipi e permette di modificare le proprietà specifiche e i valori degli attributi |
 | `CHPROP` | | presente | 0.6 | colore, layer, tipo, scala del tipo, spessore; mancano Thickness e Transparency (0.9) |
 | `COLOR` | `COL`, `COLOUR`, `-COLOR` | presente | 0.6 | indice AutoCAD, nomi standard e Truecolor RGB; niente cataloghi di colori |
-| `QSELECT` | | presente | 0.6 | finestra di dialogo per filtrare per tipo e proprietà |
+| `QSELECT` | | presente | 0.6 | finestra di dialogo per filtrare per tipo e proprietà; dalla 0.8.1 riconosce tutti i tipi della 0.8 |
 | `LINETYPE` | `LT`, `LTYPE`, `-LT`, `-LINETYPE` | presente | 0.6 | tipi continui e tipi ISO standard (`ACAD_ISO02W100`, `ACAD_ISO10W100`); caricamento ed elenco; niente file `.lin` personalizzati |
 | `LTSCALE` | `LTS` | completo | 0.6 | scala globale dei tipi di linea |
 | `CELTSCALE` | | completo | 0.6 | scala del tipo di linea per le nuove entità |
@@ -157,6 +159,21 @@ Aggiornato alla versione **0.8.1**.
 | `ID` | | assente | — | |
 | `LIST` | `LI` | assente | — | |
 
+## Griglia, snap alla griglia e UCS
+
+| Comando | Alias | Stato | Tappa | Note |
+|---|---|---|---|---|
+| `GRID` | | presente | 0.8.1 | accensione, passo, adattamento allo zoom e suddivisioni; manca la griglia a punti |
+| `SNAP` | | presente | 0.8.1 | accensione e passo sui due assi; mancano lo snap polare e quello isometrico |
+| `UCSICON` | | presente | 0.8.1 | accesa o spenta, all’origine o nell’angolo; solo UCS 2D |
+| `GRIDMODE` | | completo | 0.8.1 | accende o spegne la griglia del disegno |
+| `GRIDUNIT` | | completo | 0.8.1 | passo della griglia sugli assi X e Y |
+| `GRIDDISPLAY` | | presente | 0.8.1 | gestisce i bit di adattamento e suddivisione |
+| `GRIDMAJOR` | | completo | 0.8.1 | intervallo tra le linee principali |
+| `SNAPMODE` | | completo | 0.8.1 | accende o spegne lo snap alla griglia del disegno |
+| `SNAPUNIT` | | completo | 0.8.1 | passo dello snap sugli assi X e Y |
+| `SNAPBASE` | | completo | 0.8.1 | punto base dello snap alla griglia |
+
 ## Aiuti al disegno
 
 Non sono comandi da scrivere, ma chi viene da AutoCAD li cerca. Si contano a
@@ -164,7 +181,7 @@ parte.
 
 | Aiuto | Tasto | Stato | Tappa | Note |
 |---|---|---|---|---|
-| Snap a oggetto | `F3` | presente | 0.3 | nella 0.8.1 anche vicino, prolungamento e parallelo; mancano nodo e intersezioni apparenti e prolungate |
+| Snap a oggetto | `F3` | presente | 0.3 | nella 0.8.1 anche vicino, prolungamento e parallelo, con calamita configurabile; mancano nodo e intersezioni apparenti e prolungate |
 | Tracciamento degli snap a oggetto | `F11` | presente | 0.8 | nella 0.8.1 anche guide di prolungamento e parallele; mancano le guide polari dai punti acquisiti (`POLARMODE`) e `TRACKPATH` |
 | Orto | `F8` | completo | 0.3 | |
 | Griglia | `F7` | presente | 0.8.1 | `GRID`, passo fisso, adattiva e suddivisioni; mancano griglia a punti e rotazione con `SNAPANG` |
@@ -172,5 +189,5 @@ parte.
 | Icona dell'UCS | | presente | 0.8.1 | `UCSICON` accesa o spenta, all'origine o nell'angolo; solo UCS 2D |
 | Tracciamento polare | `F10` | presente | 0.7 | incremento con `POLARANG`, distanza scritta lungo la semiretta; mancano gli angoli aggiuntivi |
 | Selezione: clic, finestra, intersezione | | presente | 0.3 | anche trascinando, con `W`, `C`, `ALL`, *Last* e *Previous*; mancano *Fence* e i poligoni |
-| Grip | | presente | 0.7 | stiramento su linee, archi, cerchi, polilinee e testi; mancano le modalità *Move*, *Rotate*, *Scale*, *Mirror*, più grip caldi e il menu dei grip |
+| Grip | | presente | 0.7 | stiramento su linee, archi, cerchi, polilinee e testi; dalla 0.8.1 il pannello Proprietà evidenzia il vertice corrente di polilinee e SOLID; mancano le modalità *Move*, *Rotate*, *Scale*, *Mirror*, più grip caldi e il menu dei grip |
 | Immissione dinamica | `F12` | presente | 0.7.5 | domanda, coordinate, lunghezza e angolo, con `Tab`, `Invio` e prefisso assoluto `#` nella 0.8.1; manca `DYNMODE` |

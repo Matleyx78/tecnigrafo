@@ -9,21 +9,13 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **versione 0.8 — quote, retini e blocchi.** Arrivano le quote
-> lineari, allineate, angolari, radiali e diametrali con i loro stili, i
-> retini (`ANSI31`, `NET`, `SOLID`) con il contorno rilevato da un punto e le
-> isole, i blocchi con gli attributi, anche inserendo un file DXF come blocco,
-> il testo multiriga con gli stili di testo, le ellissi, l'entità `SOLID`,
-> `PEDIT` e il tracciamento degli snap a oggetto (`F11`); tutto si legge e si
-> riscrive nel DXF. Il tuo assistente IA può disegnare nel disegno aperto
-> attraverso un canale locale, spento finché non lo accendi
-> ([manuale dell'assistente](docs/manuale/assistente.md)). L'interfaccia
-> della 0.7.5 ha ora l'aspetto del riferimento, con le icone a due toni. Le
-> decisioni geometriche le prende solid-space, il kernel di Tecnigrafo, nel
-> sottomodulo `third_party/solid-space`. Le [note della 0.8](docs/rilasci/0.8.md)
-> riportano novità e limiti noti. Prossima tappa: 0.8.1, correzione di
-> mancanze importanti ([ROADMAP](docs/ROADMAP.md)); poi la
-> [0.9](docs/tappe/0.9-stampa-e-distribuzione.md), stampa e distribuzione.
+> Stato: **versione 0.8.1 — testo, attributi, proprietà e aiuti al disegno.**
+> L’editor di testo gestisce i formati di `MTEXT`, e `TEXTEDIT` modifica
+> anche quote e attributi. Il pannello Proprietà e `QSELECT` riconoscono
+> tutti i tipi della 0.8. Sono disponibili griglia e snap alla griglia,
+> icona dell’UCS, snap Vicino, Prolungamento e Parallelo, `RECTANG` e
+> `POLYGON`. Vedi le [note della 0.8.1](docs/rilasci/0.8.1.md).
+> Prossima tappa in programma: [0.8.2 — curve](docs/tappe/0.8.2-curve.md).
 
 ## Disegnare
 
