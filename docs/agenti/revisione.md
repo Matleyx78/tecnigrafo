@@ -118,7 +118,13 @@ trattano. Per ogni scheda controlla:
    candidati, la regola di pareggio e di riduzione c'è in
    [REGOLE-NUMERICHE.md](../REGOLE-NUMERICHE.md); altrimenti è [decisione].
 6. **Risposte condivise:** la riga della prova a secco c'è, e dice come restano
-   verdi i casi già uniti.
+   verdi i casi già uniti, cercati anche nei `dati.dxf` scritti a mano; per un
+   campo che l'oracolo impara solo con il pacchetto, la scheda sceglie la
+   strada A o B ([tappe/0000-pacchetto.md](../tappe/0000-pacchetto.md)).
+7. **Interfacce:** per le schede che introducono tipi o funzioni nuove in
+   `core`, la pull request del piano ha la riga del primo passaggio sulla
+   lista di CONTRATTI.md ([LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md),
+   "Revisione delle interfacce").
 
 Guarda anche la larghezza delle onde, fino a 8 pacchetti indipendenti
 ([DECISIONI.md](../DECISIONI.md), 2026-11-19).

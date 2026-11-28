@@ -2933,3 +2933,98 @@ i rimandi ai documenti che cambia.
   `command_protocol.hpp`, `command_runner.cpp`, `command_registry.cpp` e i
   loro test; dipendenze e onde non cambiano. Scartata la soluzione A, che
   avrebbe mantenuto `PromptKind::Text` e la differenza da AutoCAD.
+- **2026-11-28 — Prova manuale delle 0.8.x al termine delle sottotappe.** Il
+  responsabile esegue la prova manuale su Linux e Windows delle sottotappe
+  0.8.x **una volta sola, al termine delle 0.8.x**, e non alla chiusura di
+  ciascuna: è una deroga al punto 3 di [ROADMAP.md](ROADMAP.md), «Chiudere
+  una tappa». Le pull request di chiusura delle 0.8.x lasciano la tabella
+  «Prova manuale» delle note di rilascio «in programma», come la 0.8.1
+  (#1071), e la chiusura non si ferma per la prova mancante. Il tag di ogni
+  sottotappa si crea subito dopo il merge della sua chiusura; gli esiti si
+  aggiungono dopo nei documenti su `main`. La issue
+  [#1072](https://github.com/Matleyx78/tecnigrafo/issues/1072) resta aperta
+  come promemoria e si chiude con la pull request che registra gli esiti.
+- **2026-11-28 — Proposte di metodo della 0.8.1.** Nella pausa dopo la 0.8.1
+  il responsabile approva tutte le proposte della
+  [#991](https://github.com/Matleyx78/tecnigrafo/issues/991) ancora aperte;
+  le Catena 1–7 le aveva approvate il 2026-11-22, escludendo notifiche con un
+  bot e cruscotto. La Catena 8 è ritirata, la Catena 11 è già applicata
+  (2026-11-25). Come il 2026-11-19, per repository una pull request di soli
+  documenti e una di codice e CI:
+  - **regole, in questa pull request di documenti:**
+    - **Catena 1:** il passaggio finale di [agenti/catena.md](agenti/catena.md)
+      vale per ogni agente, avviato da un commento o dalla chat; dalla chat
+      una sola frase di avvio, in
+      [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), A2a, «Avvio dalla
+      chat», usata da B7 e B8 ([AGENTS.md](../AGENTS.md), "Quando
+      fermarsi");
+    - **Catena 3:** in B10a le decisioni si scrivono sempre nella issue e i
+      passi 3–6 li fa la catena, senza frasi dalla chat; lo smistamento in
+      chat resta possibile e finisce con la decisione nella issue;
+    - **Catena 5:** correggere «impegno non noto» prima del merge è
+      facoltativo (guida, A2); la regola per gli agenti non cambia;
+    - **primo passaggio sulle interfacce:** chi scrive le schede passa per
+      primo la lista di CONTRATTI.md sul codice chiamato, con una riga per
+      scheda nella pull request del piano; la revisione delle interfacce
+      dell'altro agente resta
+      ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Revisione delle
+      interfacce"; [agenti/revisione.md](agenti/revisione.md), punto 7 della
+      revisione del piano);
+    - **Catena 14:** nella prova a secco le «Risposte condivise» si cercano
+      anche nei `dati.dxf` scritti a mano
+      ([tappe/0000-pacchetto.md](tappe/0000-pacchetto.md));
+    - **Catena 15:** per un campo che l'oracolo ezdxf impara solo con il
+      pacchetto, la scheda sceglie prima dell'apertura la strada **A** (il
+      campo entra prima del RT) o **B** (il caso non si dichiara
+      `; oracle: ezdxf` finché il PT non è unito); scartata la strada di
+      codice nell'oracolo;
+    - **Catena 17:** chi scrive i riferimenti controlla ogni risposta anche
+      contro le regole già scritte, con una riga «controllato contro: …» per
+      caso nella pull request, che il responsabile usa in B7
+      ([agenti/riferimenti.md](agenti/riferimenti.md));
+  - **nella pull request di codice e CI**, con i documenti che descrivono
+    script e workflow: **Catena 2** (la sentinella fa il passaggio mancante
+    quando è certo), **Catena 4** (smistamento delle [decisione] da parte
+    dell'altro agente, `scripts/passa.sh … smistamento`), **Catena 6**
+    (`/unisci`), **Catena 7** (avvio dei pacchetti liberati da un merge, fino
+    a 8 catene), **Catena 9** (`ci-attendi.sh` riconosce una pull request in
+    conflitto e l'agente aggiorna con `main`), **Catena 10** (timeout e nuovi
+    tentativi sui passi apt, tetto di 90 minuti sui job; anche in
+    solid-space, con un lavoro suo), **Catena 12** (`ci-errori.sh` sceglie
+    l'esecuzione della CI e annota le righe `INVALID:`), **Catena 13** (un
+    file di sorgenti per ogni RT in `tests/verifica/sorgenti/`, raccolti in
+    `sorgenti.json` alla chiusura della tappa) e **Catena 16** (l'annotazione
+    mostra la riga dell'oracolo che fallisce).
+- **2026-11-28 — 0.8.3 e ridistribuzione.** Dopo la 0.8.2 viene la **0.8.3**,
+  una versione di completamenti sui blocchi e sui simboli
+  ([tappe/0.8.3-blocchi.md](tappe/0.8.3-blocchi.md)):
+  - dalla [#919](https://github.com/Matleyx78/tecnigrafo/issues/919): finestre
+    di `BLOCK` e `INSERT` con la libreria di simboli da sfogliare, editor dei
+    blocchi `BEDIT` e `BCLOSE`, `WBLOCK`, `PURGE` e `RENAME`; fuori `REFEDIT`
+    e i blocchi dinamici. Restano da decidere nel piano il perimetro di
+    `PURGE` e `RENAME` (solo blocchi o tutti gli oggetti con nome), il
+    formato di `WBLOCK`, il legame di `BEDIT` con gli ambienti (ADR 0041) e
+    la palette di `INSERT`;
+  - Tecnifont ([#1011](https://github.com/Matleyx78/tecnigrafo/issues/1011)),
+    deciso il 2026-11-23, con i glifi **disegnati da noi** (scartata
+    l'alternativa di Noto Sans Math);
+  - la [#762](https://github.com/Matleyx78/tecnigrafo/issues/762) (tipi di
+    linea e larghezze continui negli inserimenti stirati) passa dalla 0.8.2
+    alla 0.8.3: è un tema di blocchi e usa l'offset dell'ellisse della 0.8.2;
+  - i retini con contorni curvi restano nella 0.8.2 e passano alla 0.8.3 solo
+    se la valutazione delle richieste in solid-space (B2 della 0.8.2) dice che
+    la gemella è troppo grossa; allora anche la 0.8.3 ha una gemella.
+
+  Cambiano [ROADMAP.md](ROADMAP.md), [tappe/0.8.2-curve.md](tappe/0.8.2-curve.md)
+  e il [catalogo di parità](parita/comandi.md) (`BEDIT`, `BCLOSE` e `RENAME`
+  nuovi, assenti; `WBLOCK` e `PURGE` nella 0.8.3).
+- **2026-11-28 — Idee della pausa dopo la 0.8.1.** Chiuse le idee già finite
+  in una scheda: [#654](https://github.com/Matleyx78/tecnigrafo/issues/654)
+  (icona del programma) e [#62](https://github.com/Matleyx78/tecnigrafo/issues/62)
+  (segnalazione di errori e crash, prima parte fatta nella 0.8), tutte e due
+  nella scheda della [0.9](tappe/0.9-stampa-e-distribuzione.md);
+  [#538](https://github.com/Matleyx78/tecnigrafo/issues/538) (Electrical),
+  allargata dalla [#868](https://github.com/Matleyx78/tecnigrafo/issues/868).
+  Chiuso anche il bug [#913](https://github.com/Matleyx78/tecnigrafo/issues/913),
+  risolto dalla 0.8.1. Restano aperte, per il dopo-1.0, la
+  [#634](https://github.com/Matleyx78/tecnigrafo/issues/634) e la #868.

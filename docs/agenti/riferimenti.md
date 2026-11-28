@@ -40,6 +40,18 @@ sessione.
   in solid-space la apre il responsabile.
 - Non usare `tecnigrafo-mcp` né `tecnigrafo-script` per ricavare un valore atteso
   ([ADR 0027](../adr/0027-server-mcp-di-sviluppo.md), punto 7).
+- Prima di aprire la pull request controlla ogni risposta attesa in due modi:
+  **contro la fonte** (DXF di AutoCAD, ezdxf, calcolo indipendente) e
+  **contro le regole già scritte** che la scheda del PT cita o da cui dipende:
+  ordine e presenza dei campi in `docs/verifica/rapporto.md` (derivate
+  comprese, come `~box`), i punti della scheda del PT gemello, le regole delle
+  tappe precedenti richiamate e le funzioni di `core` già esistenti che la
+  risposta usa (per esempio `regionLoops()`). Nella descrizione della pull
+  request scrivi una riga per caso: «controllato contro: …», con le regole
+  guardate. Finché un caso è in attesa nessuno lo esegue, quindi questo è
+  l'unico controllo prima del pacchetto di lavoro: nella 0.8.1 cinque arresti
+  (RT15, RT23, RT28) venivano da risposte che contraddicevano regole scritte,
+  non la fonte ([DECISIONI.md](../DECISIONI.md), 2026-11-28).
 - Ogni condizione "Fatto quando" del pacchetto di lavoro ha almeno un caso che la
   verifica. Aggiungi i casi limite: valori nulli, punti coincidenti o quasi
   allineati, Esc a metà comando, annulla e ripeti.

@@ -102,9 +102,12 @@ quando cambiano i modelli disponibili si segue quella tabella. Dal 2026-11-11
 gli agenti sono solo Claude e Codex ([DECISIONI.md](DECISIONI.md)).
 
 Ogni pull request dichiara strumento, modello e impegno: servono alla misura
-dei pacchetti ([DECISIONI.md](DECISIONI.md), 2026-11-10). Se l'agente scrive
-«impegno non noto», correggi la riga prima di unire, con l'impegno che hai
-scelto all'avvio.
+dei pacchetti ([DECISIONI.md](DECISIONI.md), 2026-11-10). Chi li conosce li
+scrive (Claude avviato da un commento li riceve dal workflow); gli altri
+scrivono «impegno non noto», e la misura lo conta come dato mancante.
+Correggere la riga prima di unire è **facoltativo**: fallo solo se ricordi
+l'impegno che hai scelto all'avvio ([DECISIONI.md](DECISIONI.md),
+2026-11-28).
 
 ### A2a. Avviare un lavoro con un commento (la catena)
 
@@ -134,8 +137,16 @@ l'impegno della issue, e solo se la issue non aspetta altro ("Dipende da",
 "Riferimenti"); con `DRY_RUN=1` davanti mostra il testo senza scriverlo.
 Codex avviato da un commento usa il suo modello predefinito, con impegno non
 noto: se il piano chiede un modello preciso, avvialo dalla **chat** di Codex
-con la frase di B8 e in più «alla fine fai il passaggio come dice
-docs/agenti/catena.md»: la catena prosegue lo stesso.
+con la frase qui sotto, e la catena prosegue lo stesso.
+
+**Avvio dalla chat.** Per Claude o Codex avviati dalla chat la frase è **una
+sola**, la stessa in B7 e B8 (in B10a la chat non serve più): anche chi parte
+dalla chat fa il passaggio finale, quindi il lavoro torna nella catena ([DECISIONI.md](DECISIONI.md),
+2026-11-28).
+
+```text
+Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla lettera. Realizza la issue #<numero> come dice docs/agenti/catena.md e, alla fine, fai il passaggio che dice. Nella pull request scrivi modello e impegno, se li conosci.
+```
 
 **Che cosa ti torna.** Gli agenti lavorano finché non trovi una di queste
 etichette, sulla issue o sulla pull request:
@@ -832,8 +843,9 @@ delicati e leggera per gli ordinari, come dice il piano.
 
 1. Lancia `scripts/dipendenze.py <tappa>` (A4) e avvia con un commento (A2a)
    ogni pacchetto di riferimenti sotto *Ready*, anche molti nello stesso
-   momento. La pull request porta `Avvia dopo il merge: #<pacchetto>` e, con la
-   CI verde, prende l'etichetta `pronta`: i riferimenti li rivedi tu.
+   momento; dalla chat, con la frase di A2a, «Avvio dalla chat». La pull
+   request porta `Avvia dopo il merge: #<pacchetto>` e, con la CI verde,
+   prende l'etichetta `pronta`: i riferimenti li rivedi tu.
 2. In solid-space, finché non ha la catena, aggiorna la cartella, avvia
    l'agente con il modello e l'impegno del piano (A2) e scrivi:
 
@@ -851,6 +863,9 @@ delicati e leggera per gli ordinari, come dice il piano.
 3. Rivedi tu **ogni** pull request del lotto, una alla volta. È il controllo più
    importante di tutta la tappa. Guarda queste cose:
    - [ ] ogni condizione "Fatto quando" del pacchetto ha almeno un caso;
+   - [ ] solo in Tecnigrafo: ogni caso ha la sua riga «controllato contro: …»,
+         e le regole citate sono quelle della scheda
+         ([agenti/riferimenti.md](agenti/riferimenti.md));
    - [ ] i valori attesi hanno senso e non vengono dal programma che verificano
          (per esempio: in Tecnigrafo un cerchio di raggio 10 ha circonferenza
          62.83…; in solid-space un cubo di lato 1 ha volume 1, area 6 e 6
@@ -880,12 +895,13 @@ delicati e leggera per gli ordinari, come dice il piano.
 Ogni agente in una sessione sua. Possono lavorare nello stesso momento. In
 Tecnigrafo un pacchetto parte da solo al merge dei suoi riferimenti
 (`Avvia dopo il merge`); quelli senza riferimenti li avvii con un commento
-(A2a), e la catena ne chiede anche la revisione (B9). La frase qui sotto serve
-per la chat, per esempio per scegliere il modello di Codex, e per solid-space.
+(A2a), e la catena ne chiede anche la revisione (B9). Dalla chat, per esempio
+per scegliere il modello di Codex, in Tecnigrafo usa la frase di A2a, «Avvio
+dalla chat»; la frase qui sotto resta per solid-space.
 
 1. Aggiorna la cartella del repository e avvia l'agente (Claude Code o Codex)
    con il modello e l'impegno che il piano indica per il pacchetto (A2).
-2. Scrivi:
+2. In solid-space scrivi:
 
    ```text
    Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
@@ -983,53 +999,37 @@ visibili, ogni volta:
    delle uscite scritte dall'agente (A, B, …) o scrivendone una con lo stesso
    esempio. Se una scelta dipende da AutoCAD, la prova a mano si fa **prima**
    di decidere ([dxf-di-prova.md](tappe/0.7/dxf-di-prova.md)).
-3. **Una sola pull request di correzione**, in una chat con Claude e
-   Tecnigrafo in scrittura:
-
-   ```text
-   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
-   lettera. Applica le mie decisioni sui buchi della issue #<numero> come dice
-   la guida in B10a, passo 3: docs/DECISIONI.md, le schede che usano le
-   interfacce corrette, la riga Corretto: degli ADR se il loro testo cambia e
-   Modifiche al piano. Ogni decisione va nella scheda con il suo esempio e la
-   risposta scelta, in "Test richiesti". La descrizione comincia con
-   "Revisione della correzione: da fare" e le regole che cambiano. Porta la CI
-   al verde e fermati.
-   ```
-
-   La pull request non chiude la issue del pacchetto: il pacchetto riparte dopo
-   il merge. Se un buco va in solid-space, la pull request lo scrive nella
-   scheda ("Dipende da") e il pacchetto aspetta anche la issue `contratto`.
-4. **Rilettura con la lista.** Prima del merge la rilegge un agente diverso da
-   chi l'ha scritta (di norma Codex), sulle sole regole nuove o corrette:
-
-   ```text
-   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
-   lettera. Rivedi la pull request #<numero>, che porta "Revisione della
-   correzione: da fare", come dice AGENTS.md in "Le correzioni delle schede si
-   rivedono": verbale nella pull request, con un buco nuovo per commento.
-   Prendila in carico e scrivi i commenti, ma non modificarla: niente commit
-   né cambi a file, ramo, titolo o descrizione. Non scrivere in solid-space.
-   Poi fermati.
-   ```
-
-   Se il verbale apre buchi visibili nuovi, torna al passo 2 sulla stessa pull
-   request. Il secondo giro segue A3, punto 3.
+3. **Una sola pull request di correzione.** La scrive l'agente che si era
+   fermato, quando riparte dalla tua decisione, come dice
+   [agenti/catena.md](agenti/catena.md), "Ripresa dopo una decisione":
+   `docs/DECISIONI.md`, le schede che usano le interfacce corrette, la riga
+   Corretto: degli ADR se il loro testo cambia e Modifiche al piano; ogni
+   decisione va nella scheda con il suo esempio e la risposta scelta, in "Test
+   richiesti". La descrizione comincia con **Revisione della correzione: da
+   fare** e le regole che cambiano. La pull request di un pacchetto non chiude
+   la sua issue e porta `Avvia dopo il merge: #<pacchetto>`; quella di una
+   **revisione delle interfacce** porta `Closes #<issue della revisione>`. Se
+   un buco va in solid-space, la pull request lo scrive nella scheda ("Dipende
+   da") e il pacchetto aspetta anche la issue `contratto`.
+4. **Rilettura con la lista.** L'agente la passa all'altro, che la rilegge
+   sulle sole regole nuove o corrette ([agenti/revisione.md](agenti/revisione.md),
+   "Le correzioni delle schede si rivedono"). Se il verbale apre buchi visibili
+   nuovi, la trovi con `decisione` e torni al passo 2 sulla stessa pull
+   request; altrimenti la trovi con `pronta`.
 5. **Unisci** (A3). Se una decisione cambia una risposta che si vede con una
    domanda del catalogo ([verifica/domande.md](verifica/domande.md)), apri una
    issue di riferimenti con la lettera dopo il numero (`[X.Y-R<N>b]`, di chi ha
    scritto i riferimenti del pacchetto) e
    aggiungila in "Dipende da" del pacchetto; altrimenti bastano i test della
    scheda.
-6. **Riprendi il pacchetto** con la frase di B8.
+6. **Il pacchetto riparte da solo** al merge, con la riga
+   `Avvia dopo il merge`.
 
-Nella catena i passi 3–6 li fanno gli agenti: tu scrivi le decisioni (passo 2)
-nella issue del pacchetto con la riga che l'agente ti ha lasciato. L'agente
-fermo scrive la pull request di correzione, che porta
-`Avvia dopo il merge: #<pacchetto>`, e la passa all'altro agente per la
-rilettura; tu la trovi con `pronta` o `decisione`, la unisci, e il pacchetto
-riparte da solo ([agenti/catena.md](agenti/catena.md), "Ripresa dopo una
-decisione").
+Tu scrivi solo le decisioni (passo 2), **sempre nella issue** indicata, con la
+riga che l'agente ti ha lasciato: i passi 3–6 li fa la catena, senza frasi
+dalla chat ([DECISIONI.md](DECISIONI.md), 2026-11-28). Lo smistamento in chat
+con Claude (passo 1) resta possibile, ma finisce con la decisione scritta nella
+issue.
 
 ### B11. Unire i pacchetti
 

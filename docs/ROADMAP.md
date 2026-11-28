@@ -21,7 +21,8 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 7.5 | 0.7.5 | Correzione di rotta: CI e metodo, interfaccia rifatta e pronta per gli ambienti, basi della 0.8 e del 3D | **chiusa** | [0.7.5](tappe/0.7.5-correzione-di-rotta.md) |
 | 8 | 0.8 | Quote, retini, blocchi; canale MCP per l'assistente IA dell'utente | **chiusa** | [0.8](tappe/0.8-quote-retini-blocchi.md) |
 | 8.1 | 0.8.1 | Completamenti senza richieste al kernel: pannello delle proprietà, `QSELECT` e `-HATCHEDIT` per i tipi della 0.8 (#913); comandi degli attributi (`-ATTDEF`, `ATTREQ`, `-ATTEDIT`, `ATTSYNC`, `BATTMAN`, `ATTDISP`); editor del testo con i formati e `TEXTEDIT` (#662); griglia, snap alla griglia e icona dell'UCS, anche dal DXF (#664); snap *Vicino*, *Prolungamento* e *Parallelo* (#665); segno sul grip del vertice corrente scorso con *Current Vertex* nel pannello Proprietà (#799); selezione *Last* e *Previous*; calamita degli snap; prefisso `#` con l'immissione dinamica; contorni evidenziati in `-HATCH`; alias brevi di AutoCAD; `ELLIPSE` nel manuale; `RECTANG` e `POLYGON` | **chiusa** | [0.8.1](tappe/0.8.1-completamenti.md) |
-| 8.2 | 0.8.2 | Curve, con la tappa gemella di solid-space: `SPLINE` completa come AutoCAD (#888), ellissi in `TRIM`, `EXTEND`, `OFFSET`, `FILLET` e `JOIN` (#663), `BREAK` e `LENGTHEN`, contorni dei retini con ellissi e spline, tipi di linea e larghezze continui negli inserimenti stirati (#762) | in programma | [0.8.2](tappe/0.8.2-curve.md) |
+| 8.2 | 0.8.2 | Curve, con la tappa gemella di solid-space: `SPLINE` completa come AutoCAD (#888), ellissi in `TRIM`, `EXTEND`, `OFFSET`, `FILLET` e `JOIN` (#663), `BREAK` e `LENGTHEN`, contorni dei retini con ellissi e spline (nella 0.8.3 se la gemella non li regge) | in programma | [0.8.2](tappe/0.8.2-curve.md) |
+| 8.3 | 0.8.3 | Blocchi e simboli: finestre di `BLOCK` e `INSERT` con la libreria di simboli, editor dei blocchi (`BEDIT`, `BCLOSE`), `WBLOCK`, `PURGE` e `RENAME` (#919); tipi di linea e larghezze continui negli inserimenti stirati (#762); Tecnifont, il font con i simboli del disegno tecnico (#1011) | in programma | [0.8.3](tappe/0.8.3-blocchi.md) |
 | 9 | 0.9 | Stampa, PDF, traduzioni, installatori | in programma | [0.9](tappe/0.9-stampa-e-distribuzione.md) |
 | 10 | 1.0 | Stabilità e prestazioni: CAD 2D per lavoro reale | in programma | [1.0](tappe/1.0-stabilita.md) |
 | — | 2.x | Modellatore 3D parametrico | da definire | [2.x](tappe/2.x-modellatore-3d.md) |
@@ -70,6 +71,8 @@ solid-space, e le due avanzano insieme
 3. La prova manuale descritta nel documento è stata eseguita su Windows e Linux.
    Su macOS si esegue quando c'è un revisore che lo usa, e l'esito si annota nelle
    note di rilascio; la sua mancanza non blocca la chiusura ([DECISIONI.md](DECISIONI.md), 2026-10-16).
+   Per le sottotappe 0.8.x la prova si fa una volta sola, al termine di tutte
+   ([DECISIONI.md](DECISIONI.md), 2026-11-28).
 4. Si crea il tag `vX.Y.0` con le note di rilascio (`docs/rilasci/X.Y.md`); per
    una tappa con tre numeri il tag è `vX.Y.Z` (come `v0.7.5`). Se la tappa
    gemella di solid-space ha pubblicato una versione, la pull request di

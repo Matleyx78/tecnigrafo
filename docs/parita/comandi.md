@@ -29,7 +29,7 @@ Aggiornato alla versione **0.8.1**.
 |---|---|
 | completo | 28 |
 | presente | 50 |
-| assente | 25 |
+| assente | 28 |
 
 ## Disegno
 
@@ -70,8 +70,8 @@ Aggiornato alla versione **0.8.1**.
 | `HATCH` | `H` | presente | 0.8 | `-HATCH` (anche `HATCH`) con un punto interno o *Select objects*, motivi `ANSI31`, `SOLID` e `NET`, scala e angolo; non associativo; contorni solo fra linee, archi, cerchi e polilinee; i retini di AutoCAD con altri motivi si leggono e si vedono; dalla 0.8.1 evidenzia il contorno e le isole prima della conferma; manca la finestra |
 | `HPISLANDDETECTION` | | completo | 0.8 | *Normal*, *Outer*, *Ignore* |
 | `HATCHEDIT` | `HE` | presente | 0.8.1 | `-HATCHEDIT` con *Properties*, *Origin* e *Style*; mancano contorni, associatività e ordine di disegno |
-| `BLOCK` | `B` | presente | 0.8 | `-BLOCK` (anche `BLOCK`): nome, punto base e oggetti, ridefinizione; manca la finestra |
-| `INSERT` | `I` | presente | 0.8 | `-INSERT` (anche `INSERT`) di un blocco o file DXF, `nome=file`, *Basepoint*, *Scale* (*Corner*, *XYZ*) e *Rotate*; dalla 0.8.1 chiede gli attributi secondo `ATTREQ`; manca la finestra |
+| `BLOCK` | `B` | presente | 0.8, 0.8.3 | `-BLOCK` (anche `BLOCK`): nome, punto base e oggetti, ridefinizione; la finestra nella 0.8.3 |
+| `INSERT` | `I` | presente | 0.8, 0.8.3 | `-INSERT` (anche `INSERT`) di un blocco o file DXF, `nome=file`, *Basepoint*, *Scale* (*Corner*, *XYZ*) e *Rotate*; dalla 0.8.1 chiede gli attributi secondo `ATTREQ`; la finestra, con la libreria di simboli da sfogliare, nella 0.8.3 |
 | `ATTDEF` | `ATT` | presente | 0.8.1 | `-ATTDEF` dalla riga di comando; niente attributi multiriga |
 | `ATTREQ` | | completo | 0.8.1 | sceglie fra i valori predefiniti e le domande durante l’inserimento |
 | `AFLAGS` | | completo | 0.8.1 | maschera dei modi per la prossima definizione di attributo |
@@ -79,7 +79,9 @@ Aggiornato alla versione **0.8.1**.
 | `ATTSYNC` | | presente | 0.8.1 | per nome o inserimento; aggiorna tutti gli inserimenti della definizione |
 | `BATTMAN` | | presente | 0.8.1 | modifica, riordina, elimina e sincronizza le definizioni; niente estrazione dati |
 | `ATTDISP` | | presente | 0.8.1 | *Normal*, *ON* e *OFF* |
-| `WBLOCK` | `W` | assente | — | |
+| `BEDIT` | `BE` | assente | 0.8.3 | editor dei blocchi |
+| `BCLOSE` | | assente | 0.8.3 | chiude l'editor dei blocchi, salvando o scartando |
+| `WBLOCK` | `W` | assente | 0.8.3 | |
 
 ## Modifica
 
@@ -145,7 +147,8 @@ Aggiornato alla versione **0.8.1**.
 | `QSAVE` / `SAVE` | | presente | 0.5 | salvataggio rapido atomico nel file corrente o salvataggio di una copia; formato `.cadx` e DXF |
 | `SAVEAS` | | presente | 0.5 | salva con nuovo nome in formato `.cadx` e DXF R2018 |
 | `PLOT` | | assente | 0.9 | stampa e PDF |
-| `PURGE` | `PU` | assente | — | |
+| `PURGE` | `PU` | assente | 0.8.3 | dei blocchi; se anche degli altri oggetti con nome, lo decide il piano della 0.8.3 |
+| `RENAME` | `REN` | assente | 0.8.3 | dei blocchi; se anche delle altre tabelle, lo decide il piano della 0.8.3 |
 | `ZOOM` | `Z` | assente | — | lo zoom con la rotella esiste dalla 0.1; manca il comando con le opzioni (*Extents*, *Window*…) |
 | `PAN` | `P` | assente | — | lo spostamento con il mouse esiste dalla 0.1; manca il comando |
 | `REGEN` | `RE` | assente | — | |

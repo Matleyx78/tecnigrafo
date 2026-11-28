@@ -119,6 +119,15 @@ funzione e l'altra: un'informazione decisa esattamente da solid-space che la
 scheda passa avanti solo come valore arrotondato (#359). I buchi trovati li
 decide il responsabile in [DECISIONI.md](DECISIONI.md).
 
+Prima di quel pacchetto, **chi scrive le schede passa per primo la stessa
+lista** sul codice che ogni scheda chiama: firme reali, chi chiama la funzione
+e che cosa vede, dove vive il dato. Nella pull request del piano scrive una
+riga per scheda che il passaggio è fatto. La revisione dell'altro agente
+resta, ma parte da schede già passate, e il verbale porta al responsabile
+solo i buchi veri: nella 0.8.1 i verbali di PT4 (#927) e PT5 (#928) avevano 20
+bloccanti e 15 decisioni, in buona parte evitabili leggendo il codice
+([DECISIONI.md](DECISIONI.md), 2026-11-28).
+
 **Comandi nell'interfaccia.** Una tappa che aggiunge comandi li porta anche
 nell'interfaccia, nella stessa tappa: per ogni comando nuovo l'icona a ruoli,
 la voce nel registro delle azioni (menu, ribbon e barre dell'interfaccia
@@ -142,7 +151,10 @@ e ribbon ([DECISIONI.md](DECISIONI.md), 2026-11-07).
   risposta di una fonte di verifica (oracolo ezdxf, rapporto, catalogo delle
   domande, archivio dei casi di solid-space), la prova a secco dice quali casi
   già uniti tocca e come restano verdi fino all'ultimo pacchetto che ne
-  dipende.
+  dipende, cercandoli anche nei `dati.dxf` scritti a mano; per un campo che
+  l'oracolo impara solo con il pacchetto sceglie fra le strade A e B del
+  modello; e dice quali regole già scritte la risposta deve rispettare
+  ([DECISIONI.md](DECISIONI.md), 2026-11-28).
 - **Pacchetti trasversali in testa.** Un pacchetto che cambia righe che tutti i
   rapporti contengono (come PT22 con `dimension styles:` nella 0.8) si segna
   come trasversale e va **in testa** all'ordine, così i riferimenti nascono già
