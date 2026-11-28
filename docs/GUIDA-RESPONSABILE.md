@@ -273,6 +273,25 @@ Vale per **ogni** pull request, nei due repository.
    pull request branches**. In alternativa, nel terminale:
    `gh pr update-branch <numero>`.
 
+**Con il comando `/unisci`.** In Tecnigrafo i punti 4–8 li può fare un
+workflow (`.github/workflows/unisci.yml`, `scripts/unisci.py`): dopo aver
+letto la pull request (punti 1–3, galleria compresa per `app/` e
+`resources/`), scrivi un commento che sia **solo** `/unisci`. Il workflow
+controlla la revisione (`pronta`; per un pacchetto il verbale «Revisione di …»
+dell'agente che non è quello della issue; per una correzione delle schede il
+«Verbale della revisione della correzione»), che tutti i controlli siano
+verdi, che non ci sia `decisione` e che la issue «main rosso» sia chiusa. Se
+dopo l'uscita del ramo su `main` è entrato codice (non solo documenti),
+aggiorna il ramo con `main` (merge commit) e aspetta la CI. Poi fa lo squash
+and merge con la tua riga `Signed-off-by`, con il tuo token, così *Dopo il
+merge* parte come sempre. Se un controllo manca risponde nella pull request
+perché e non unisce niente. Più `/unisci` scritti insieme si eseguono uno alla
+volta, nell'ordine, anche di notte e anche dal telefono. Il DCO lo firmi
+sempre tu: il comando è tuo, e gli agenti non lo scrivono mai
+([AGENTS.md](../AGENTS.md); [DECISIONI.md](DECISIONI.md), 2026-11-28). Le
+altre pull request aperte, che il merge lascia indietro, le aggiorna ciascun
+agente alla sua prossima CI, o il comando stesso al loro merge.
+
 Quando unisci il pacchetto di una tappa, guarda anche B11.
 
 ### A4. Controllare le dipendenze

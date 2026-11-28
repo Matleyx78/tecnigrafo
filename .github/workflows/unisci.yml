@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 The Tecnigrafo authors
+#
+# The merge command of the owner (docs/GUIDA-RESPONSABILE.md, A3;
+# docs/DECISIONI.md, 2026-11-28, Catena 6): a comment that is exactly
+# `/unisci`, written by the owner on a pull request, runs scripts/unisci.py,
+# which checks the review, the checks, `decisione` and «main rosso», updates
+# the branch with main when main has new code (and waits for the CI), then
+# squashes and merges with the owner's Signed-off-by line. It merges with the
+# RELAY_PAT secret, so "Dopo il merge" starts as after a merge by hand.
+#
+# The agents write with the owner's account too: they never write `/unisci`
+# (AGENTS.md). Several commands run one at a time, in order.
+name: Unisci
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  checks: read
+
+concurrency:
+  group: unisci
+  cancel-in-progress: false
+
+jobs:
+  unisci:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.comment.user.login == github.repository_owner &&
+      startsWith(github.event.comment.body, '/unisci')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Only a comment that is exactly /unisci
+        id: comando
+        env:
+          BODY: ${{ github.event.comment.body }}
+        run: |
+          text="$(printf '%s' "$BODY" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          if [ "$text" = /unisci ]; then
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "The comment is not exactly /unisci: nothing to do."
+          fi
+      - uses: actions/checkout@v7
+        if: steps.comando.outputs.ok == '1'
+      - name: Merge
+        if: steps.comando.outputs.ok == '1'
+        env:
+          GH_TOKEN: ${{ secrets.RELAY_PAT }}
+          PR: ${{ github.event.issue.number }}
+        run: python3 scripts/unisci.py "$PR"
