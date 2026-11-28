@@ -68,6 +68,9 @@ gh api -X DELETE "repos/Matleyx78/tecnigrafo/issues/<numero>/labels/AA-Presa%20i
 - Mai la chiocciola davanti al nome di un agente, nemmeno in un esempio o fra
   apici: ogni menzione avvia una sessione, e i passaggi si fanno solo con
   `scripts/passa.sh`.
+- Mai l'etichetta `AAA-UNISCI`, né aggiungerla né toglierla: è il comando di
+  merge del responsabile ([GUIDA-RESPONSABILE.md](docs/GUIDA-RESPONSABILE.md),
+  A3), e l'account con cui scrivi è il suo.
 - Ogni file nuovo inizia con:
   ```cpp
   // SPDX-License-Identifier: GPL-3.0-or-later
@@ -98,13 +101,17 @@ per farlo passare violeresti una regola, o se dopo tre tentativi non passa. Sono
 motivi estranei anche una CI che aspetta un'approvazione (`scripts/ci-attendi.sh`
 esce con 6) e una CI che fallisce solo nei casi della issue «main rosso» aperta:
 scrivilo nella pull request, con il rimando alla issue, e fermati **senza**
-l'etichetta `decisione`. Gli altri motivi per fermarsi sono nei file della
-tabella.
+l'etichetta `decisione`. Una pull request in conflitto con `main`, che non ha
+CI (`scripts/ci-attendi.sh` esce con 7), **non** è un motivo estraneo:
+aggiornala con `main` e vai avanti ([comandi.md](docs/agenti/comandi.md)). Gli
+altri motivi per fermarsi sono nei file della tabella.
 
 Prima di fermarti per un dubbio (un buco, un caso che sembra sbagliato),
 controlla se una regola esistente lo decide già, come fa chi rivede
 ([revisione.md](docs/agenti/revisione.md), "Che cosa blocca una revisione"): se
-sì, applicala, scrivilo nella pull request e vai avanti.
+sì, applicala, scrivilo nella pull request e vai avanti. Se resta almeno una
+[decisione], prima di arrivare al responsabile la smista l'altro agente
+([catena.md](docs/agenti/catena.md), "Smistamento").
 
 Quando ti fermi, **non aspettare la CI** (niente `scripts/ci-attendi.sh`):
 commenta nella pull request o nella issue, togli `AA-Presa in carico` e termina
@@ -153,7 +160,7 @@ Vale ogni riga che corrisponde.
 | Se | Leggi anche |
 |---|---|
 | issue con titolo `[X.Y-PN]` o `[FN]`, o etichetta `pacchetto` | [pacchetto.md](docs/agenti/pacchetto.md) |
-| issue con titolo `[X.Y-RN]` o etichetta `riferimenti`; tocchi `tests/verifica/casi/` o `sorgenti.json` | [riferimenti.md](docs/agenti/riferimenti.md) |
+| issue con titolo `[X.Y-RN]` o etichetta `riferimenti`; tocchi `tests/verifica/casi/`, `sorgenti.json` o `tests/verifica/sorgenti/` | [riferimenti.md](docs/agenti/riferimenti.md) |
 | commenti una pull request non tua; la descrizione comincia con **Revisione della correzione**; modifichi una scheda in `docs/tappe/X.Y/` della tappa aperta | [revisione.md](docs/agenti/revisione.md) |
 | lavori a una issue o a una pull request, comunque tu sia stato avviato (commento su GitHub o chat); il messaggio cita `docs/agenti/catena.md`, un giro di revisione o una «Decisione del responsabile» | [catena.md](docs/agenti/catena.md) |
 | la scheda cita intestazioni `solid_space/…`; tocchi `third_party/solid-space` o file che le includono; usi `scripts/richiesta.sh` | [contratto.md](docs/agenti/contratto.md) |

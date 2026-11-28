@@ -7,6 +7,9 @@
 # mention must come from the owner, because the agents ignore bots:
 # scripts/avvia.sh writes it with the RELAY_PAT secret, and does not start
 # an issue that still waits for another one ("Dipende da", "Riferimenti").
+# Then it starts the issues the merge has freed (scripts/liberati.py), up to
+# 8 open chains, and lists in the pull request the ones beyond the limit
+# (docs/DECISIONI.md, 2026-11-28, Catena 7).
 name: Dopo il merge
 
 on:
@@ -33,13 +36,20 @@ jobs:
         run: |
           # Only lines of their own count, not the words quoted in a sentence.
           numbers="$(printf '%s\n' "$BODY" | python3 scripts/catena.py avvia)"
-          if [ -z "$numbers" ]; then
-            echo "Nothing to start."
-            exit 0
-          fi
           # Let GitHub close the issues of "Closes #N" first: the issues to
           # start may depend on them.
           sleep 20
           for n in $numbers; do
             bash scripts/avvia.sh "$n" "La pull request #$PR è stata unita."
           done
+          # The issues freed by the merge, within the limit of open chains.
+          freed="$(GH_TOKEN="$GH_TOKEN_UTENTE" python3 scripts/liberati.py "$PR" $numbers)"
+          echo "Freed: $freed"
+          for n in $(jq -r '.avvia[]' <<<"$freed"); do
+            bash scripts/avvia.sh "$n" "La pull request #$PR è stata unita e ha chiuso le issue che aspettava."
+          done
+          beyond="$(jq -r '[.oltre[] | "#\(.)"] | join(", ")' <<<"$freed")"
+          if [ -n "$beyond" ]; then
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" \
+              -f body="Dopo il merge: liberate anche $beyond, ma le catene aperte sono già 8. Avviale con \`scripts/avvia.sh <numero>\` quando c'è posto (docs/agenti/catena.md, \"Dopo il merge\")." > /dev/null
+          fi

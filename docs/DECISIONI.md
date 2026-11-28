@@ -3028,3 +3028,48 @@ i rimandi ai documenti che cambia.
   Chiuso anche il bug [#913](https://github.com/Matleyx78/tecnigrafo/issues/913),
   risolto dalla 0.8.1. Restano aperte, per il dopo-1.0, la
   [#634](https://github.com/Matleyx78/tecnigrafo/issues/634) e la #868.
+- **2026-11-28 — Codice e CI della pausa dopo la 0.8.1.** Applicata la parte
+  di codice e CI delle «Proposte di metodo della 0.8.1» (stessa data):
+  - **Catena 9:** `scripts/ci-attendi.sh` esce con **7** quando una pull
+    request non ha CI perché è in conflitto con `main`; l'agente aggiorna il
+    ramo con `main` invece di fermarsi ([AGENTS.md](../AGENTS.md), «Quando
+    fermarsi»; [agenti/comandi.md](agenti/comandi.md));
+  - **Catena 10:** in `ci.yml`, `sonar.yml` e `solid-space-main.yml` ogni
+    passo apt ha `timeout-minutes: 10` e tre nuovi tentativi con un timeout di
+    rete; ogni job di `ci.yml` ha un tetto di **90** minuti, tranne il job
+    con clang-tidy e l'analisi Sonar, che hanno **180** minuti perché i loro
+    tempi normali arrivano a oltre due ore (127 minuti misurati). In
+    solid-space lo stesso cambio va fatto in una chat di quel repository;
+  - **Catena 12 e 16:** `scripts/ci-errori.sh` legge l'esecuzione della CI di
+    un commit, più gli altri workflow rossi; `scripts/ci-annota.sh` annota i
+    casi `INVALID:` sulla riga che il messaggio indica e, nel passo *Oracolo
+    ezdxf*, ogni domanda che fallisce con `expected:` ed `ezdxf:`;
+  - **Catena 2:** la sentinella, prima di mettere `ferma` su una pull
+    request, fa lei il passaggio quando è uno solo e certo (revisione 1 per un
+    pacchetto o una correzione delle schede, `pronta` per i riferimenti), con
+    `RELAY_PAT` ([agenti/catena.md](agenti/catena.md), «Sentinella»; ADR 0053,
+    riga Corretto:);
+  - **Catena 4:** `scripts/passa.sh <agente> <numero> smistamento` e la
+    sezione «Smistamento» di catena.md, come in solid-space: il revisore con
+    una [decisione] passa all'esecutore, che corregge lui le [bloccante] che
+    una regola decide; l'esecutore fermo su un buco passa al revisore, che lo
+    fa ripartire;
+  - **Catena 7:** *Dopo il merge* avvia anche le issue liberate dal merge,
+    fino a 8 catene aperte (`scripts/liberati.py`);
+  - **Catena 6:** il comando di merge del responsabile è l'**etichetta
+    `AAA-UNISCI`**, non un commento `/unisci` come nella proposta: il
+    responsabile la preferisce, e un'etichetta non si scrive per sbaglio in
+    un testo (`.github/workflows/unisci.yml`, con `pull_request_target`, che
+    esegue sempre i file di `main`; `scripts/unisci.py`; guida, A3). Il
+    workflow la toglie alla fine, unita o no la pull request. Gli agenti, che
+    usano lo stesso account, non mettono né tolgono mai quell'etichetta
+    ([AGENTS.md](../AGENTS.md), «Regole che non si possono violare»);
+  - **Catena 13:** un file di sorgenti per ogni blocco di riferimenti in
+    `tests/verifica/sorgenti/`, letti da CMake, dall'oracolo e dalla CI con
+    nomi unici fra tutti i file; alla chiusura una pull request di soli
+    riferimenti li raccoglie in `sorgenti.json` con `scripts/sorgenti.py
+    raccogli` ([agenti/chiusura.md](agenti/chiusura.md)).
+
+  Con questa pull request le proposte della
+  [#991](https://github.com/Matleyx78/tecnigrafo/issues/991) sono tutte
+  applicate.

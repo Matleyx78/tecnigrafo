@@ -83,19 +83,30 @@ consuma token.
 # ancora in corso dopo dieci attese di fila (circa 90 minuti: la CI di Linux ne
 # richiede più di 30); 6 se aspetta un'approvazione da più di 20 minuti
 # (action_required): ha già scritto «CI da approvare» nella pull request, e ti
-# fermi senza `decisione` (catena.md, "Fermate senza decisione"). Accetta anche
-# <sha> o <id>; non serve `gh`.
+# fermi senza `decisione` (catena.md, "Fermate senza decisione"); 7 se non c'è
+# un'esecuzione perché la pull request è in conflitto con main (GitHub non
+# avvia la CI su una pull request in conflitto). Accetta anche <sha> o <id>;
+# non serve `gh`.
 scripts/ci-attendi.sh
 # perché è fallita: per ogni job fallito, il passo e gli errori (poche righe)
 scripts/ci-errori.sh              # l'ultimo commit su cui sei; oppure <sha> o <id>
 ```
+
+Per un commit o una pull request `scripts/ci-errori.sh` legge l'esecuzione
+più recente della **CI** (`ci.yml`), non l'ultima di qualunque workflow
+(*Submodule pointer*, la sentinella e gli altri girano sullo stesso commit); se
+sullo stesso commit sono rossi anche altri workflow, li mostra tutti, la CI per
+prima.
 
 `scripts/ci-errori.sh` legge solo l'API REST, quindi funziona anche dove i log non
 sono raggiungibili (per esempio il proxy blocca il servizio che li ospita) e dove
 manca `gh`: allora usa `curl` e `jq`, senza token. Gli
 errori vengono da `scripts/ci-annota.sh`, che la CI esegue su ogni passo di
 compilazione, test e verifica; per i passi in Python l'annotazione contiene le
-ultime righe dell'output. Se ancora non basta, e solo allora, il log intero dei
+ultime righe dell'output. Un caso che `tecnigrafo-script` trova non valido
+(`INVALID: <caso>: <messaggio>`) ha la sua annotazione, sulla riga che il
+messaggio indica; nel passo *Oracolo ezdxf* ogni domanda che fallisce ha la sua,
+sulla sua riga di `domande.tgq`, con `expected:` ed `ezdxf:`. Se ancora non basta, e solo allora, il log intero dei
 controlli falliti:
 
 ```sh
@@ -103,7 +114,12 @@ gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
 ```
 
 Con exit 2, 5 o 6 non rilanciare l'attesa: scrivi nella pull request il
-messaggio dello script e fermati (con 6 senza `decisione`). Dopo dieci attese con exit 3 si arriva comunque a 5.
+messaggio dello script e fermati (con 6 senza `decisione`). Con exit 7 **non ti
+fermi**: aggiorna il ramo con `main` (`git fetch origin main` e `git merge
+origin/main`, merge commit, mai rebase), risolvi i conflitti, pubblica e
+aspetta di nuovo. Ti fermi solo se per risolverli dovresti cambiare in modo non
+meccanico file fuori dal tuo pacchetto, o se dopo l'aggiornamento la CI
+continua a non partire ([DECISIONI.md](../DECISIONI.md), 2026-11-28). Dopo dieci attese con exit 3 si arriva comunque a 5.
 
 Nel riepilogo per l'utente, tra ciò che non hai potuto verificare, ci sono per
 esempio Windows e macOS.

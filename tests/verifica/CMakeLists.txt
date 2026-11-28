@@ -16,9 +16,17 @@ include(TecnigrafoVerifica)
 # Shared by ci, tidy and asan within this agent's build directory.
 set(TG_VERIFICA_SOURCES_DIR "${CMAKE_BINARY_DIR}/../verifica-sorgenti" CACHE PATH
     "Pinned public files used by verification cases")
+# sorgenti.json, then one file per block of references in sorgenti/ during a
+# stage, collected into sorgenti.json when the stage closes (docs/verifica/casi.md).
+# The listing of the folder is part of the build system, like in-attesa/.
 set(manifest "${CMAKE_CURRENT_SOURCE_DIR}/sorgenti.json")
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${manifest}")
-tg_download_verifica_sources("${manifest}" "${TG_VERIFICA_SOURCES_DIR}")
+file(GLOB TG_VERIFICA_MANIFESTS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/sorgenti/*.json")
+list(SORT TG_VERIFICA_MANIFESTS)
+set(TG_VERIFICA_SOURCE_NAMES "")
+foreach(file IN ITEMS "${manifest}" LISTS TG_VERIFICA_MANIFESTS)
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${file}")
+    tg_download_verifica_sources("${file}" "${TG_VERIFICA_SOURCES_DIR}" TG_VERIFICA_SOURCE_NAMES)
+endforeach()
 
 foreach(outcome IN ITEMS correct-hash wrong-hash)
     add_test(NAME "verifica-download/${outcome}"

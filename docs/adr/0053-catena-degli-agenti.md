@@ -2,6 +2,11 @@
 
 - **Stato:** Accettato
 - **Data:** 2026-11-14
+- **Corretto:** 2026-11-28 — punti 6 e 7, nella pausa dopo la 0.8.1
+  ([DECISIONI.md](../DECISIONI.md), «Proposte di metodo della 0.8.1»): *Dopo
+  il merge* avvia anche le issue che il merge libera, fino a 8 catene aperte;
+  la sentinella fa lei il passaggio mancante quando è uno solo e certo. Tutti e
+  due seguono un merge o un avvio del responsabile.
 
 ## Contesto
 
@@ -60,12 +65,16 @@ si sono ridotti a decisioni e merge.
    il suo agente, se le issue delle sue righe "Dipende da" e "Riferimenti"
    sono chiuse. Le scrivono i riferimenti (per il loro pacchetto) e le
    correzioni delle schede o dei riferimenti fatte dopo una decisione (per il
-   pacchetto fermo).
+   pacchetto fermo). Avvia anche le issue che il merge libera (tutte le
+   issue di quelle righe chiuse), fino a **8 catene aperte**; le altre le
+   scrive nella pull request unita.
 7. **Sentinella.** Ogni 30 minuti un workflow mette `ferma` sulle catene
    avviate e senza movimento da almeno **60 minuti** (la CI di Tecnigrafo è
    lenta), comprese le decisioni scritte e mai riprese, e segnala
    `AA-Presa in carico` rimasta. Lascia stare le pull request con la CI in
-   corso.
+   corso. Quando il passo mancante di una pull request è uno solo e certo (il
+   primo giro di revisione, o `pronta` per i riferimenti) lo fa lei, invece di
+   mettere `ferma`.
 8. **Niente lotti.** Con la catena ogni lavoro si avvia con il suo commento,
    anche molti nello stesso momento: il lavoro a lotti di riferimenti e
    revisioni non c'è più (`docs/agenti/lotti.md` è tolto).

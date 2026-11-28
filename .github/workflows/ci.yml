@@ -62,6 +62,7 @@ jobs:
   changes:
     name: Detect code changes
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     outputs:
       code: ${{ steps.filter.outputs.code }}
       gallery: ${{ steps.filter.outputs.gallery }}
@@ -124,6 +125,7 @@ jobs:
     name: Reference separation (ADR 0011)
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
         with:
@@ -134,8 +136,8 @@ jobs:
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           changed=$(git diff --name-only "$BASE...$HEAD")
-          references=$(echo "$changed" | grep -E '^tests/verifica/(casi/|sorgenti\.json$)' || true)
-          others=$(echo "$changed" | grep -vE '^tests/verifica/(casi/|sorgenti\.json$|in-attesa/)' | grep -v '^$' || true)
+          references=$(echo "$changed" | grep -E '^tests/verifica/(casi/|sorgenti\.json$|sorgenti/)' || true)
+          others=$(echo "$changed" | grep -vE '^tests/verifica/(casi/|sorgenti\.json$|sorgenti/|in-attesa/)' | grep -v '^$' || true)
           if [ -n "$references" ] && [ -n "$others" ]; then
             # docs/DECISIONI.md, 2026-11-16 (PT3, #675): a package that makes a
             # DXF type handled updates, in the same pull request, the count and
@@ -171,6 +173,7 @@ jobs:
     name: Commit addresses
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
         with:
@@ -187,6 +190,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
       - name: Check formatting
@@ -201,6 +205,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.scripts == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -227,6 +232,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 180
     env:
       CCACHE_DIR: ${{ github.workspace }}/build/ccache
       CCACHE_MAXSIZE: 500M
@@ -239,9 +245,10 @@ jobs:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build libgtest-dev clang-tidy-18 libgl1-mesa-dev libxkbcommon-dev ccache
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y ninja-build libgtest-dev clang-tidy-18 libgl1-mesa-dev libxkbcommon-dev ccache
           mkdir -p "$CCACHE_DIR"
       - uses: jurplel/install-qt-action@v4
         with:
@@ -250,10 +257,10 @@ jobs:
           py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
           cache: true
       - uses: actions/cache@v6
-        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        if: hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') != ''
         with:
           path: build/verifica-sorgenti
-          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') }}
       - name: Restore the compiler cache
         uses: actions/cache/restore@v6
         with:
@@ -358,6 +365,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     env:
       # ccache: see the comment of the linux job.
       CCACHE_DIR: ${{ github.workspace }}/build/ccache
@@ -369,9 +377,10 @@ jobs:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev ccache
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev ccache
           mkdir -p "$CCACHE_DIR"
       - uses: jurplel/install-qt-action@v4
         with:
@@ -380,10 +389,10 @@ jobs:
           py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
           cache: true
       - uses: actions/cache@v6
-        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        if: hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') != ''
         with:
           path: build/verifica-sorgenti
-          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') }}
       # docs/adr/0038, point 4: the real project refuses -ffast-math. The rule
       # stops the configuration before any subproject, so this takes seconds.
       - name: Forbidden floating-point options stop the configuration
@@ -449,6 +458,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     env:
       QT_QPA_PLATFORM: offscreen
       # ccache: see the comment of the linux job.
@@ -461,9 +471,10 @@ jobs:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev ccache
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev ccache
           mkdir -p "$CCACHE_DIR"
       - uses: jurplel/install-qt-action@v4
         with:
@@ -477,10 +488,10 @@ jobs:
         with:
           python-version: '3.12'
       - uses: actions/cache@v6
-        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        if: hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') != ''
         with:
           path: build/verifica-sorgenti
-          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') }}
       - name: Restore the compiler cache
         uses: actions/cache/restore@v6
         with:
@@ -548,6 +559,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     env:
       # ccache: see the comment of the linux job.
       CCACHE_DIR: ${{ github.workspace }}/build/ccache
@@ -559,9 +571,10 @@ jobs:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev ccache
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev ccache
           mkdir -p "$CCACHE_DIR"
       - uses: jurplel/install-qt-action@v4
         with:
@@ -570,10 +583,10 @@ jobs:
           py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
           cache: true
       - uses: actions/cache@v6
-        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        if: hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') != ''
         with:
           path: build/verifica-sorgenti
-          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') }}
       - name: Restore the compiler cache
         uses: actions/cache/restore@v6
         with:
@@ -621,6 +634,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.io == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     env:
       ASAN_OPTIONS: detect_leaks=1:abort_on_error=1:detect_stack_use_after_return=1:strict_string_checks=1:check_initialization_order=1
       UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
@@ -632,14 +646,15 @@ jobs:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build clang-18 libclang-rt-18-dev libgtest-dev
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 update
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60 install -y ninja-build clang-18 libclang-rt-18-dev libgtest-dev
       - uses: actions/cache@v6
-        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        if: hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') != ''
         with:
           path: build/verifica-sorgenti
-          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') }}
       - name: Build fuzzing targets
         run: |
           set -o pipefail
@@ -667,8 +682,11 @@ jobs:
           from pathlib import Path
           import shutil
           import sys
-          manifest = Path("tests/verifica/sorgenti.json")
-          if manifest.exists():
+          manifests = [Path("tests/verifica/sorgenti.json")]
+          manifests += sorted(Path("tests/verifica/sorgenti").glob("*.json"))
+          for manifest in manifests:
+              if not manifest.exists():
+                  continue
               for source in json.loads(manifest.read_text())["sources"]:
                   seed = Path(os.environ["TG_VERIFICA_SOURCES_DIR"]) / source["name"]
                   shutil.copyfile(seed, Path(sys.argv[1]) / ("source-" + source["name"]))
@@ -703,6 +721,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: windows-2025-vs2026
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
         with:
@@ -717,10 +736,10 @@ jobs:
           arch: win64_msvc2022_64
           cache: true
       - uses: actions/cache@v6
-        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        if: hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') != ''
         with:
           path: build/verifica-sorgenti
-          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') }}
       # docs/adr/0038, point 3: Release, which links the release MSVC runtime
       # and the optimised Qt by itself. Debug stays on Linux, where the ASan
       # job looks for memory errors (docs/adr/0016); with Release the
@@ -766,6 +785,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: macos-26
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
         with:
@@ -780,10 +800,10 @@ jobs:
           py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
           cache: true
       - uses: actions/cache@v6
-        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        if: hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') != ''
         with:
           path: build/verifica-sorgenti
-          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json', 'tests/verifica/sorgenti/*.json') }}
       - name: Build, warnings as errors
         run: |
           set -o pipefail
@@ -821,6 +841,7 @@ jobs:
     needs: [changes, linux-release, windows, macos]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8

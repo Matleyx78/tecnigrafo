@@ -23,8 +23,9 @@ sessione.
 
 ## In un pacchetto di riferimenti (`[X.Y-RTN]`)
 
-- Tocca solo `tests/verifica/casi/`, `tests/verifica/sorgenti.json` e
-  `tests/verifica/in-attesa/`: la CI rifiuta una pull request che mescola
+- Tocca solo `tests/verifica/casi/`, il tuo file
+  `tests/verifica/sorgenti/<X.Y>-RT<N>.json` e `tests/verifica/in-attesa/`:
+  la CI rifiuta una pull request che mescola
   riferimenti e altri file.
 - Non lavorare a un pacchetto di riferimenti se il pacchetto di lavoro collegato
   è assegnato a te.
@@ -55,8 +56,13 @@ sessione.
 - Ogni condizione "Fatto quando" del pacchetto di lavoro ha almeno un caso che la
   verifica. Aggiungi i casi limite: valori nulli, punti coincidenti o quasi
   allineati, Esc a metà comando, annulla e ripeti.
-- Per ogni file preso dal web scrivi in `sorgenti.json` indirizzo, versione, hash
-  SHA-256 e licenza, e nella pull request il link alla pagina della licenza. Solo
+- Per ogni file preso dal web scrivi indirizzo, versione, hash SHA-256 e
+  licenza nel **tuo** file `tests/verifica/sorgenti/<X.Y>-RT<N>.json`, con lo
+  stesso nome del tuo file di `in-attesa/` e il formato di `sorgenti.json`
+  ([verifica/casi.md](../verifica/casi.md)); non aggiungere voci in fondo a
+  `sorgenti.json`, che due pacchetti in parallelo si contenderebbero. Una
+  correzione dei riferimenti dopo l'unione cambia le voci del file del suo RT.
+  Nella pull request scrivi il link alla pagina della licenza. Solo
   licenze compatibili con la GPLv3 che permettano la ridistribuzione; nel dubbio,
   non usare il file e scrivilo nella pull request.
 - Elenca i nuovi casi nel tuo file `tests/verifica/in-attesa/<X.Y>-RT<N>.txt`

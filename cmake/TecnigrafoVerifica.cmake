@@ -9,7 +9,15 @@ include_guard(GLOBAL)
 
 # Download at configure time only. Tests consume these pinned files offline.
 # Each source is stored as <output>/<name>, the identifier in sorgenti.json.
+# The optional third argument names a variable with the names already used by
+# other manifests (sorgenti.json and the files of sorgenti/, docs/verifica/casi.md):
+# a name must be unique across all of them, and the variable is updated.
 function(tg_download_verifica_sources manifest output)
+    set(names "")
+    if(ARGC GREATER 2)
+        set(names_var "${ARGV2}")
+        set(names "${${names_var}}")
+    endif()
     if(NOT EXISTS "${manifest}")
         return()
     endif()
@@ -30,7 +38,6 @@ function(tg_download_verifica_sources manifest output)
 
     file(MAKE_DIRECTORY "${output}")
     file(LOCK "${output}/.download.lock" GUARD FUNCTION TIMEOUT 120)
-    set(names "")
     math(EXPR last "${count} - 1")
     foreach(index RANGE 0 ${last})
         foreach(field IN ITEMS name url version sha256 license license-url)
@@ -78,6 +85,9 @@ function(tg_download_verifica_sources manifest output)
         endif()
         file(RENAME "${partial}" "${destination}")
     endforeach()
+    if(DEFINED names_var)
+        set(${names_var} "${names}" PARENT_SCOPE)
+    endif()
 endfunction()
 
 # Also usable from a standalone configure-time probe or a CTest subprocess.

@@ -12,6 +12,16 @@ rilascio, catalogo di parità, stato, versione nel `CMakeLists.txt`) è in
 che cosa fa poi il responsabile è in [docs/ROADMAP.md](../ROADMAP.md),
 "Chiudere una tappa".
 
+## Le sorgenti dei riferimenti
+
+Prima della pull request di chiusura, se `tests/verifica/sorgenti/` ha dei
+file, apri una pull request di **soli riferimenti** sul ramo
+`docs/sorgenti-X.Y`: `python3 scripts/sorgenti.py raccogli` sposta le voci in
+`tests/verifica/sorgenti.json` e cancella i file della cartella. Tocca solo
+quei file, quindi la separazione dei riferimenti (ADR 0011) resta rispettata;
+con la CI verde mettile `pronta`. La chiusura parte dopo il suo merge
+([verifica/casi.md](../verifica/casi.md), "`tests/verifica/sorgenti.json`").
+
 ## Le regole del nucleo nella chiusura
 
 - Valgono tutte, tranne due voci di "Prima di dichiarare il lavoro finito" che

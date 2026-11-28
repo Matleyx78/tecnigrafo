@@ -20,12 +20,14 @@ caso. Il responsabile può aggiungere qui casi o file che vuole vedere. -->
 
 ## In breve
 
-- Tocca solo `tests/verifica/casi/`, `tests/verifica/sorgenti.json` e
-  `tests/verifica/in-attesa/`.
+- Tocca solo `tests/verifica/casi/`, il tuo file
+  `tests/verifica/sorgenti/<X.Y>-RT<N>.json` e `tests/verifica/in-attesa/`.
 - Valori attesi da calcoli, file pubblici o programmi di riferimento, **mai**
   eseguendo Tecnigrafo.
-- File presi dal web: indirizzo, versione, hash SHA-256 e licenza in
-  `sorgenti.json`, link alla licenza nella pull request.
+- File presi dal web: indirizzo, versione, hash SHA-256 e licenza nel tuo file
+  `tests/verifica/sorgenti/<X.Y>-RT<N>.json` (stesso nome del tuo file di
+  `in-attesa/`, formato di `sorgenti.json`), mai in `sorgenti.json`; link
+  alla licenza nella pull request.
 - I nuovi casi vanno nel tuo file `tests/verifica/in-attesa/<X.Y>-R<N>.txt` (il
   tag di questo blocco, con la lettera se è diviso: `<X.Y>-R<N>a.txt`), una riga `<area>/<nome> #<issue del lavoro>` per
   caso.

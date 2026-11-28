@@ -140,12 +140,13 @@ noto: se il piano chiede un modello preciso, avvialo dalla **chat** di Codex
 con la frase qui sotto, e la catena prosegue lo stesso.
 
 **Avvio dalla chat.** Per Claude o Codex avviati dalla chat la frase è **una
-sola**, la stessa in B7 e B8 (in B10a la chat non serve più): anche chi parte
-dalla chat fa il passaggio finale, quindi il lavoro torna nella catena ([DECISIONI.md](DECISIONI.md),
+sola**, la stessa in B7 e B8 e nei due repository, che hanno tutti e due la
+catena (in B10a la chat non serve più): anche chi parte dalla chat fa il
+passaggio finale, quindi il lavoro torna nella catena ([DECISIONI.md](DECISIONI.md),
 2026-11-28).
 
 ```text
-Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla lettera. Realizza la issue #<numero> come dice docs/agenti/catena.md e, alla fine, fai il passaggio che dice. Nella pull request scrivi modello e impegno, se li conosci.
+Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla lettera. Realizza la issue #<numero> come dice docs/agenti/catena.md e, alla fine, fai il passaggio che dice. Nella pull request scrivi modello e impegno, se li conosci.
 ```
 
 **Che cosa ti torna.** Gli agenti lavorano finché non trovi una di queste
@@ -272,6 +273,26 @@ Vale per **ogni** pull request, nei due repository.
    pulsante si vede con l'impostazione del repository **Always suggest updating
    pull request branches**. In alternativa, nel terminale:
    `gh pr update-branch <numero>`.
+
+**Con l'etichetta `AAA-UNISCI`.** In Tecnigrafo i punti 4–8 li può fare un
+workflow (`.github/workflows/unisci.yml`, `scripts/unisci.py`): dopo aver
+letto la pull request (punti 1–3, galleria compresa per `app/` e
+`resources/`), mettile l'etichetta `AAA-UNISCI`. Il workflow
+controlla la revisione (`pronta`; per un pacchetto il verbale «Revisione di …»
+dell'agente che non è quello della issue; per una correzione delle schede il
+«Verbale della revisione della correzione»), che tutti i controlli siano
+verdi, che non ci sia `decisione` e che la issue «main rosso» sia chiusa. Se
+dopo l'uscita del ramo su `main` è entrato codice (non solo documenti),
+aggiorna il ramo con `main` (merge commit) e aspetta la CI. Poi fa lo squash
+and merge con la tua riga `Signed-off-by`, con il tuo token, così *Dopo il
+merge* parte come sempre. Se un controllo manca risponde nella pull request
+perché e non unisce niente; in tutti e due i casi toglie l'etichetta, quindi
+per riprovare la rimetti. Più etichette messe insieme si eseguono una alla
+volta, nell'ordine, anche di notte e anche dal telefono. Il DCO lo firmi
+sempre tu: il comando è tuo, e gli agenti non mettono mai l'etichetta
+([AGENTS.md](../AGENTS.md); [DECISIONI.md](DECISIONI.md), 2026-11-28). Le
+altre pull request aperte, che il merge lascia indietro, le aggiorna ciascun
+agente alla sua prossima CI, o il comando stesso al loro merge.
 
 Quando unisci il pacchetto di una tappa, guarda anche B11.
 
@@ -846,21 +867,11 @@ delicati e leggera per gli ordinari, come dice il piano.
    momento; dalla chat, con la frase di A2a, «Avvio dalla chat». La pull
    request porta `Avvia dopo il merge: #<pacchetto>` e, con la CI verde,
    prende l'etichetta `pronta`: i riferimenti li rivedi tu.
-2. In solid-space, finché non ha la catena, aggiorna la cartella, avvia
-   l'agente con il modello e l'impegno del piano (A2) e scrivi:
+2. In solid-space vale lo stesso: anche lì i riferimenti si avviano con un
+   commento o dalla chat con la frase di A2a, uno per pacchetto, senza lotti
+   ([DECISIONI.md](DECISIONI.md), 2026-11-28).
 
-   ```text
-   Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
-   lettera. Prendi i pacchetti di riferimenti pronti della tappa <tappa>
-   assegnati a te, uno dopo l'altro, come dice AGENTS.md in "Lavoro a lotti".
-   Per ognuno apri la pull request e porta la CI al verde; alla fine scrivimi
-   un solo riepilogo.
-   ```
-
-   L'agente lavora da solo finché i pacchetti pronti non finiscono. Puoi
-   allontanarti: alla fine trovi il riepilogo con tutte le pull request.
-
-3. Rivedi tu **ogni** pull request del lotto, una alla volta. È il controllo più
+3. Rivedi tu **ogni** pull request di riferimenti, una alla volta. È il controllo più
    importante di tutta la tappa. Guarda queste cose:
    - [ ] ogni condizione "Fatto quando" del pacchetto ha almeno un caso;
    - [ ] solo in Tecnigrafo: ogni caso ha la sua riga «controllato contro: …»,
@@ -895,27 +906,18 @@ delicati e leggera per gli ordinari, come dice il piano.
 Ogni agente in una sessione sua. Possono lavorare nello stesso momento. In
 Tecnigrafo un pacchetto parte da solo al merge dei suoi riferimenti
 (`Avvia dopo il merge`); quelli senza riferimenti li avvii con un commento
-(A2a), e la catena ne chiede anche la revisione (B9). Dalla chat, per esempio
-per scegliere il modello di Codex, in Tecnigrafo usa la frase di A2a, «Avvio
-dalla chat»; la frase qui sotto resta per solid-space.
+(A2a), e la catena ne chiede anche la revisione (B9); in solid-space lo
+stesso, con la sua catena. Dalla chat, per esempio per scegliere il modello di
+Codex, usa nei due repository la frase di A2a, «Avvio dalla chat».
 
 1. Aggiorna la cartella del repository e avvia l'agente (Claude Code o Codex)
    con il modello e l'impegno che il piano indica per il pacchetto (A2).
-2. In solid-space scrivi:
+2. Scrivi la frase di A2a, «Avvio dalla chat», con il numero della issue. Vale
+   anche per i pacchetti di revisione delle interfacce, che il piano mette
+   nella tabella con gli altri (B4, "Revisione delle interfacce"): l'agente
+   segue la loro scheda, con il verbale nella issue e senza pull request.
 
-   ```text
-   Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
-   lettera. Prendi il prossimo pacchetto della tappa <tappa> assegnato a te,
-   secondo le regole di AGENTS.md. Realizzalo, apri la pull request, porta la CI
-   al verde e fermati, come dice AGENTS.md. Se è una revisione delle
-   interfacce, segui invece la sua scheda: verbale nella issue, senza
-   correggere le schede né aprire pull request, poi fermati.
-   ```
-
-   La stessa frase vale per i pacchetti di revisione delle interfacce, che il
-   piano mette nella tabella con gli altri (B4, "Revisione delle interfacce").
-
-3. Se l'agente risponde che nessun pacchetto è pronto, è normale: vuol dire che
+3. Se l'agente risponde che il pacchetto non è pronto, è normale: vuol dire che
    aspetta un merge (una dipendenza o i suoi riferimenti). Riprovi dopo. In
    Tecnigrafo, per sapere che cosa aspetta, e per non avviarlo a vuoto, guarda
    prima *Ready* e *Blocked* di `scripts/dipendenze.py <tappa>` (A4).
@@ -935,20 +937,8 @@ Codex. Le pull request in fascia media che toccano parti delicate hanno una
 revisione mirata in fascia forte. In Tecnigrafo la revisione la chiede la
 catena: l'esecutore passa la pull request al revisore con `scripts/passa.sh`,
 fino a tre giri, e tu la trovi con `pronta`, o con `decisione` se serve una
-tua scelta ([agenti/catena.md](agenti/catena.md), "Revisione"). In solid-space,
-finché non ha la catena, quando ci sono alcune pull request di lavoro aperte
-avvia l'agente (A2) e scrivi:
-
-```text
-Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
-lettera. Rivedi le pull request aperte, come dice AGENTS.md in "Lavoro a
-lotti", e alla fine scrivimi un solo riepilogo.
-```
-
-L'agente lascia un commento di revisione in ognuna, senza modificare file, e
-rivede solo quelle scritte da un modello diverso dal suo. Leggi i commenti prima
-di unire: se uno chiede correzioni che condividi, passalo all'agente che ha
-scritto la pull request.
+tua scelta ([agenti/catena.md](agenti/catena.md), "Revisione"). In
+solid-space lo stesso, con la sua catena. Leggi i verbali prima di unire.
 
 ### B10. Un riferimento contestato
 
@@ -1035,14 +1025,15 @@ issue.
 
 Ogni pull request si unisce come in A3. In più, durante una tappa:
 
-1. **Avvia ciò che il merge ha sbloccato.** In Tecnigrafo le issue delle righe
-   `Avvia dopo il merge: #N` partono da sole; le altre che il merge sblocca (i
-   pacchetti di riferimenti e di lavoro con la riga "Dipende da" ora tutta
-   chiusa) le avvii con un commento (A2a), guardando *Ready* di
-   `scripts/dipendenze.py <tappa>`. In solid-space, finché non ha la catena,
-   riavvia l'agente che ha finito con la frase di B8, il lotto di B7 quando
-   un merge ha sbloccato nuovi pacchetti di riferimenti e quello di B9 quando
-   si sono accumulate nuove pull request da rivedere.
+1. **Avvia ciò che il merge ha sbloccato.** In Tecnigrafo partono da sole le
+   issue delle righe `Avvia dopo il merge: #N` e quelle che il merge libera
+   (le righe "Dipende da" e "Riferimenti" ora tutte chiuse), fino a 8 catene
+   aperte ([agenti/catena.md](agenti/catena.md), "Dopo il merge"). Quelle oltre
+   il limite te le scrive *Dopo il merge* nella pull request unita: le avvii
+   con `scripts/avvia.sh <numero>` quando c'è posto, guardando *Ready* di
+   `scripts/dipendenze.py <tappa>`. In solid-space le issue delle righe
+   `Avvia dopo il merge` partono da sole come qui; le altre sbloccate le avvii
+   con un commento (A2a) o con `scripts/avvia.sh` di solid-space.
 2. **Quando unisci un pacchetto di solid-space**, la sua pull request elenca
    nella riga «Sblocca:» le issue di Tecnigrafo che aspettavano proprio quel
    pacchetto: possono partire subito, senza aspettare la fine della tappa di
@@ -1091,7 +1082,8 @@ la chiusura (B13; [DECISIONI.md](DECISIONI.md), 2026-11-03 e 2026-11-07).
    Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md. Tutte le issue
    del milestone v<tappa> sono chiuse: prepara la pull request di chiusura della
    tappa come descritto in docs/LAVORO-IN-PARALLELO.md, "Chiudere la tappa", sul
-   ramo docs/chiusura-<tappa>. Poi fermati.
+   ramo docs/chiusura-<tappa>, e alla fine fai il passaggio di
+   docs/agenti/catena.md (l'etichetta pronta).
    ```
 
 2. Leggi la pull request: per ogni criterio di chiusura deve esserci la prova (un
